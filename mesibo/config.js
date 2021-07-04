@@ -1,6 +1,6 @@
 // config.js
 
-/** Copyright (c) 2020 Mesibo
+/** Copyright (c) 2021 Mesibo
  * https://mesibo.com
  * All rights reserved.
  *
@@ -52,20 +52,16 @@
 var MESIBO_ACCESS_TOKEN = ""; 
 
 /* App ID used to create a user token. */
-var MESIBO_APP_ID = "web";
+var MESIBO_APP_ID = "com.mesibo.firstapp";
 
 /* If you are hosting Mesibo backend on your own server, change this accordingly.
  * Refer https://github.com/mesibo/messenger-app-backend
  */
-const MESIBO_API_URL = "https://app.mesibo.com/messenger/api.php";
+const MESSENGER_API_URL = "https://messenger.mesibo.com";
 
 /* Default images */
 const MESIBO_DEFAULT_PROFILE_IMAGE = "images/profile/default-profile-icon.jpg";
 const MESIBO_DEFAULT_GROUP_IMAGE = "images/profile/default-group-icon.jpg";
-
-/* File url sources */
-var MESIBO_DOWNLOAD_URL = "https://appimages.mesibo.com/";
-var MESIBO_UPLOAD_URL = "https://s3.mesibo.com/api.php";
 
 /************************ Messenger Config Start *****************************/
 
@@ -80,31 +76,6 @@ var isContactSync = true;
 */
 var isMessageSync = false;
 
-/* (Optional) You can provide a list of contacts/groups,
-* for displaying a list of users to chat with and contact synchronization 
-
-For example:
-var MESIBO_LOCAL_CONTACTS =[
-
-{	
-	"address" : "18885551001",
-	"groupid" : 0,
-	"picture" : "images/profile/default-profile-icon.jpg",
-	"name"    : "MesiboTest",
-	"status"  : "Let's Chat.."
-},
-
-{	
-	"groupid" : 104661,	 
-	"picture" : "images/profile/default-group-icon.jpg",
-	"name"    : "Mesibo Group",
-	"members" : "1:123,456,789"		//Members list. Add 1: to mark as admin
-},
-
-]
-**/
-MESIBO_LOCAL_CONTACTS = [];
-
 /*Optional link preview*/
 const isLinkPreview = false; //Set to false if link preview not required
 const LINK_PREVIEW_SERVICE = "http://api.linkpreview.net/";
@@ -115,11 +86,8 @@ const LINK_DEFAULT_IMAGE = "images/file/default-link-icon.jpg"
 
 /************************ Popup Config Start *****************************/
 
-/* Set Display Avatar and destination address for popup */
-const POPUP_DISPLAY_NAME = "Mesibo"
-const POPUP_DISPLAY_PICTURE = "images/profile/default-profile-icon.jpg"
 /* A destination where the popup demo app will send message or make calls */
-const POPUP_DESTINATION_USER = "xxx" 
+const POPUP_DESTINATION_USER = "<dest user>" 
 
 /************************ Popup Config End *****************************/
 
@@ -130,3 +98,23 @@ if (isDebug) var MesiboLog = console.log.bind(window.console);
 else var MesiboLog = function() {}
 
 var ErrorLog = console.log.bind(window.console);
+
+function saveLoginToken(token){
+	localStorage.setItem("MESIBO_MESSENGER_TOKEN", token);
+	return 0;
+}
+
+function deleteTokenInStorage(){
+	localStorage.removeItem("MESIBO_MESSENGER_TOKEN");
+}
+
+function getLoginToken(){
+	if(MESIBO_ACCESS_TOKEN && MESIBO_ACCESS_TOKEN.length > 16)
+		return MESIBO_ACCESS_TOKEN;
+
+	var token = localStorage.getItem("MESIBO_MESSENGER_TOKEN");
+	if(token && token.length > 16) return token;
+
+	return null;
+}
+

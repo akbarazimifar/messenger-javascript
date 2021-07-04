@@ -1,6 +1,6 @@
 //login.js
 
-/** Copyright (c) 2020 Mesibo
+/** Copyright (c) 2021 Mesibo
  * https://mesibo.com
  * All rights reserved.
  *
@@ -42,193 +42,91 @@
  *
  */
 
-function sendRequest(url, callback, postData) {
-    var req = createXMLHTTPObject();
-    if (!req) return;
+function _getPhoneNumber(){
+	var phone = document.getElementById("phone").value;
+	if(!phone)
+		return "";
 
-    var usePost = true;
+	//xxx:Validate Phone Number
+	if(phone[0] == '+'){
+		phone = phone.substr(1); //Strip +
+	}
 
-    if(req.setRequestHeader == 'undefined' || typeof req.setRequestHeader == 'undefined')
-        usePost = false;
-
-    var method = (postData && usePost) ? "POST" : "GET";
-
-    if(postData) {
-        if(!usePost) {
-            url = url + '?' + postData;
-            postData = null;
-        }
-    }
-
-    req.open(method, url, true);
-    if (postData && typeof(postData) != 'object') {
-        req.setRequestHeader('Content-type','application/x-www-form-urlencoded');
-    }
-
-    req['processed'] = false;
-    function onData() {
-            if(callback && !req.processed) {
-            req.processed = true;
-            callback(req.responseText);
-            }
-    }
-    
-    if(req.onload != 'undefined' && typeof req.onload != 'undefined')
-        req.onload = onData;   
-
-    req.onreadystatechange = function () {
-        if (req.readyState != 4) return;
-        if (req.status != 200 && req.status != 304) {
-         // alert('HTTP error ' + req.status);
-            return;
-        }
-
-        if(callback && !req.processed) {
-            req.processed = true;
-            callback(req.response);
-        }
-    }
-
-    //http://cypressnorth.com/programming/internet-explorer-aborting-ajax-requests-fixed/
-    if (typeof XDomainRequest != 'undefined') {
-        req.onprogress = function () { };
-        req.ontimeout = function () { };
-        req.onerror = function () { };
-        if (req.readyState == 4) return;
-
-        setTimeout(function(){ req.send(); }, 0);
-        return;
-    }
-
-    if (req.readyState == 4) return;
-    req.send(postData);
+	return phone;
 }
 
-var XMLHttpFactories = [
-    function () {return new XDomainRequest();},
-    function () {return new XMLHttpRequest()},
-    function () {return new ActiveXObject("Microsoft.XMLHTTP")},
-    function () {return new ActiveXObject("Msxml2.XMLHTTP")},
-    function () {return new ActiveXObject("Msxml3.XMLHTTP")}
-];
+function _getVerificationCode(){
+	var code = document.getElementById("otp").value;
+	if(!isValidString(code))
+		return "";
 
-function createXMLHTTPObject() {
-    var xmlhttp = false;
-    for (var i=0;i<XMLHttpFactories.length;i++) {
-        try {
-            xmlhttp = XMLHttpFactories[i]();
-        }
-        catch (e) {
-            continue;
-        }
-        break;
-    }
-    return xmlhttp;
+	//xxx:Validate code
+	return code;
 }
 
+function _getAppId(){
+	if(!isValidString(MESIBO_APP_ID))
+		return "";
 
+	return MESIBO_APP_ID;
+}
 
-  function _getPhoneNumber(){
-    var phone = document.getElementById("phone").value;
-    if(!phone)
-      return "";
+function getMesiboDemoAppToken(api) {
+	var p = {};
+	p['op'] = 'login';
+	p['appid'] = _getAppId();
+	p['phone'] = _getPhoneNumber();
+	var otp = _getVerificationCode();
 
-    //xxx:Validate Phone Number
-    if(phone[0] == '+'){
-        phone = phone.substr(1); //Strip +
-    }
-    
-    return phone;
-  }
+	if(isValidString(otp)){
+		p['otp'] = otp;
+		//Login with OTP
+		console.log("gen with otp");
+	}
+	else if(isValidString(phone)){
+		//Register Phone to get OTP
+		document.getElementById('phone').readOnly = true;
+		document.getElementById("otp-input").style.display = "block";
+		document.getElementById("otp").innerHTML = "";
+	}
 
-  function _getVerificationCode(){
-    var code = document.getElementById("otp").value;
-    if(!isValidString(code))
-      return "";
+	var http = api.createhttpRequest();
+	http.setUrl(MESSENGER_API_URL);
+        http.setPostData(p, true);
+        http.send(null, function(cbdata, response) {
+                console.log(response);
+		var resp = JSON.parse(response);
+		if(resp.result != "OK") {
+			console.log(resp);
+			_displayLoginError(resp.result);
+			return;
+		}
 
-    //xxx:Validate code
-    return code;
-  }
+		var token = resp.token;
+		if(isValidString(token)){
+			console.log("Login Successfull");
 
-  function _getAppId(){
-    if(!isValidString(MESIBO_APP_ID))
-      return "";
+			document.getElementById("phone").innerHTML = null;
+			document.getElementById("otp").innerHTML = null;
 
-    return MESIBO_APP_ID;
-  }
+			$('#ModalLoginForm').modal('hide');
+			MESIBO_ACCESS_TOKEN = token;
+			setTokenInStorage(token);
 
-  function getMesiboDemoAppToken() {
-      var appid = _getAppId();
-      var phone = _getPhoneNumber();
-      var code = _getVerificationCode();
-      console.log("appid", appid, "phone", phone, "code", code);
+			//Launch Messenger Application
+			launchMessenger();
+		}
 
-      if(isValidString(code)){
-          //Login with OTP
-          console.log("gen with otp");
-          sendRequest(MESIBO_API_URL, appCallback, "op=login&phone=" + phone + "&appid=" + appid + "&code=" + code);
-      }
-      else if(isValidString(phone)){
-          //Register Phone to get OTP
-          sendRequest(MESIBO_API_URL, appCallback, "op=login&phone=" + phone + "&appid=" + appid);
-          document.getElementById('phone').readOnly = true;
-          document.getElementById("otp-input").style.display = "block";
-          document.getElementById("otp").innerHTML = "";
-        }
+        });
+}
 
-  }
+function _displayLoginError(error) {
+	alert("Login Error: " + error + "\n Please ensure you have entered a valid phone number & otp");
+}
 
-  function _displayLoginError(error) {
-    alert("Login Error: " + error + "\n Please ensure you have entered a valid phone number & otp");
-  }
+function loadLoginWindow(){
+	$('#ModalLoginForm').modal({backdrop: 'static', keyboard: false});
+	document.getElementById("otp-input").style.display = "none";
+	document.getElementById("otp").innerHTML = null; 
+}
 
-  function appCallback(r) { 
-    
-    var resp = JSON.parse(r);
-    var token = resp['token'];
-    if(resp.result == "OK"){
-        if(isValidString(token)){
-            console.log("Login Successfull");
-
-            document.getElementById("phone").innerHTML = null;
-            document.getElementById("otp").innerHTML = null;
-
-            $('#ModalLoginForm').modal('hide');
-            MESIBO_ACCESS_TOKEN = token;
-            setTokenInStorage(token);
-
-            //Launch Messenger Application
-            launchMessenger();
-        }
-    }
-    else{
-        console.log(resp);
-        _displayLoginError(resp.result);
-      }
-  }
-
-  function loadLoginWindow(){
-    $('#ModalLoginForm').modal({backdrop: 'static', keyboard: false});
-    document.getElementById("otp-input").style.display = "none";
-    document.getElementById("otp").innerHTML = null; 
-  }
-
-  function setTokenInStorage(token){
-    if(!isValidString(token))
-      return -1;
-
-    localStorage.setItem("MESIBO_MESSENGER_TOKEN", token);
-    return 0;
-  }
- 
-  function deleteTokenInStorage(){
-    localStorage.removeItem("MESIBO_MESSENGER_TOKEN");
-  }
-
-  function getTokenFromStorage(){
-    var token = localStorage.getItem("MESIBO_MESSENGER_TOKEN");
-    if(!isValidString(token))
-      return "";
-
-    return token;
-  }

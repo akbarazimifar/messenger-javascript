@@ -1,6 +1,6 @@
 //ui.js
 
-/** Copyright (c) 2020 Mesibo
+/** Copyright (c) 2021 Mesibo
  * https://mesibo.com
  * All rights reserved.
  *
@@ -42,11 +42,6 @@
  *
  */
 
-const MESIBO_FILETYPE_IMAGE = 1;
-const MESIBO_FILETYPE_VIDEO = 2;
-const MESIBO_FILETYPE_AUDIO = 3;
-const MESIBO_FILETYPE_LOCATION = 4;
-
 // Get the matching status tick icon
 let getStatusClass = (status) => {
         // MesiboLog("getStatusClass", status);
@@ -54,16 +49,17 @@ let getStatusClass = (status) => {
         switch (status) {
 
                 case MESIBO_MSGSTATUS_SENT:
-                        statusTick = "far fa-check-circle";
+                        statusTick = "las la-check";
                         break;
 
                 case MESIBO_MSGSTATUS_DELIVERED:
-                        statusTick = "fas fa-check-circle";
+                        statusTick = "las la-check-double";
                         break;
 
 
                 case MESIBO_MSGSTATUS_READ:
-                        statusTick = "fas fa-check-circle";
+                        //statusTick = "fas fa-check-circle";
+                        statusTick = "las la-check-double";
                         break;
 
                 default:

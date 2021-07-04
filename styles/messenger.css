@@ -84,9 +84,10 @@
 	position:relative;
 	max-width: 75%;
 	word-break: break-word;
+	border-radius:10px !important;
 }
 .message-item.self {
-	background: #dcf8c6!important;
+	background: #d5f5ec!important;
 }
 .message-item .number {
 	color: #1f7aec !important;
@@ -125,7 +126,7 @@
 #profile-pic {
 	cursor: pointer;
 	position: relative;
-	width: 100px;
+	width: 100%;
 }
 
 .profile-input {

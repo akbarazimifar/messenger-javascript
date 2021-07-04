@@ -15,7 +15,6 @@
     <script type="text/javascript" src="scripts/controller.js"></script>
     <script type="text/javascript" src="scripts/ui.js"></script>
     <script type="text/javascript" src="mesibo/utils.js"></script>		
-    <script type="text/javascript" src="mesibo/app.js"></script>
     <script type="text/javascript" src="mesibo/calls.js"></script>
     <script type="text/javascript" src="mesibo/files.js"></script>
     <script type="text/javascript" src="mesibo/recorder.js"></script>
@@ -55,7 +54,7 @@
               <div class="Messenger_content" style="overflow: hidden;">
                 <div class="Messages" id="messages">
                   <div class="Messages_list" >
-                    <div ng-repeat="m in  mesibo_user_messages" ng-class="{'outgoing_msg':isSent(m),'incoming_msg':isReceived(m)}">                      
+                    <div ng-repeat="m in  getMessages()" ng-class="{'outgoing_msg':isSent(m),'incoming_msg':isReceived(m)}">                      
                       <div ng-class="{'sent_msg':isSent(m), 'received_msg':isReceived(m)}">
                         <!-- <div class="options" style="z-index: 200; float: right;">
                           <a href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><i class="fas fa-angle-down text-muted px-2"></i>
@@ -81,7 +80,8 @@
                             <div ng-show='isOtherMsg(m)' class= "image-holder"><i class="fas fa-file" style="font-size: 30px;"></i><span style="font-size: 15px; padding-left: 5px; text-overflow: ellipsis; max-width: 100px; color: grey;text-decoration: none;">{{getFileName(m)}}</span>
                             </div>                              
                         </a>
-                        <div style="max-width: 200px;overflow-wrap: break-word;">
+                                <div class="d-flex justify-content-between">
+                        <div style="max-width: 200px; overflow-wrap: break-word;">
                           {{m.message}}        
                         </div>
                         <div class="time ml-auto small text-left flex-shrink-0 align-self-end text-muted" style="font-size: 10px;"ng-style="{'float': isSent(m) ? 'right':'left'}" >{{m.date.time}}
@@ -89,6 +89,7 @@
                         </div>
                       </div>
                     </div>
+                  </div>
                   </div>
                   <!-- Anchor to Scroll -->
                   <div id="messages_end">&nbsp;</div>
