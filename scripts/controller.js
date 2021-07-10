@@ -260,6 +260,12 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return false;
 	}
 
+	// [OPTIONAL] refer to the comment below
+	$scope.Mesibo_onGroupMembers = function(p, members) {
+		$scope.membersList = members;
+		$scope.refresh();
+	}
+
 	$scope.showProfile = function(p) {
 		MesiboLog("showProfile");
 		if(!p)
@@ -267,10 +273,16 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.display_profile = p; 
 		$scope.membersList = [];
 		if(p.getGroupId() > 0) {
-			p.getMembers(function(p, members) {
-				$scope.membersList = members;
-				$scope.refresh();
-			});
+			// you can either pass a function or listenr, this code list 
+			// both teh syntax for reference
+			if(true) {
+				p.getMembers(0, false, $scope);
+			} else {
+				p.getMembers(0, false, function(p, members) {
+					$scope.membersList = members;
+					$scope.refresh();
+				});
+			}
 		}
 		$scope.refresh();
 	};
