@@ -65,12 +65,6 @@ const MESIBO_DEFAULT_GROUP_IMAGE = "images/profile/default-group-icon.jpg";
 
 /************************ Messenger Config Start *****************************/
 
-/* Toggle for using phone Login*/
-var isLoginEnabled = true;
-
-/* Toggle for synchronizing contacts*/
-var isContactSync = true;
-
 /* Toggle for synchronizing messages
 *  See https://mesibo.com/documentation/tutorials/get-started/synchronization/
 */

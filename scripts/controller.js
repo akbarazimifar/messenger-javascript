@@ -45,10 +45,10 @@
 
 
 //The number of messages loaded into the message area in one read call
-const MAX_MESSAGES_READ = 10;
+const MAX_MESSAGES_READ = 100;
 
 //The number of users to be loaded (summary)
-const MAX_MESSAGES_READ_SUMMARY = 10;
+const MAX_MESSAGES_READ_SUMMARY = 100;
 
 const MAX_FILE_SIZE_SUPPORTED = 10000000;
 
@@ -123,6 +123,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.connection_status = '';
 	$scope.summarySession = {};
 	$scope.msg_read_limit_reached = false;
+	$scope.users_synced = false;
 	$scope.scroll_messages = null;
 	$scope.is_shared = false;
 	$scope.new_contact_name = '';
@@ -680,8 +681,9 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 				if(result == undefined || result == null)
 					return;
 
-				if(isMessageSync && this.readCount && result < this.readCount){
+				if(isMessageSync && !result && !$scope.users_synced){
 					MesiboLog("Run out of users to display. Syncing..");
+					$scope.users_synced = true;
 					$scope.syncMessages(this, this.readCount - result);
 				}
 
@@ -721,7 +723,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		readSession.sync(count,
 			function on_sync(i){
 				MesiboLog("on_sync", i);
-				if(i>0){
+				if(i > 0){
 					MesiboLog("Attempting to read "+ i + " messages");
 					this.read(i);
 				}
