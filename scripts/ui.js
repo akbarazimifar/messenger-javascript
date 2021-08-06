@@ -73,6 +73,9 @@ let getStatusClass = (status) => {
         return statusTick;
 };
 
+let getActivityColor = () => {
+	return "#00b700";
+}
 
 // If the status value is read type, color it blue. Default color of status icon is gray
 let getStatusColor = (status) => {

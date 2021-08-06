@@ -356,10 +356,6 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.refresh()
 	}
 
-	$scope.onKeydown = function(event) {
-		console.log(event);
-	}
-
 	$scope.showContactForm = function(){
 		$('#ModalContactForm').modal("show");
 	}
@@ -499,6 +495,10 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.getUserLastMessage = function(m){
+
+		var profile = m['profile'];
+
+		if(profile.isTypingInGroup(m['groupid'])) return "typing...";
 
 		if(m.filetype)
 			return getFileTypeDescription(m);
@@ -640,7 +640,21 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		}
 	}
 
+	$scope.getUserActivity = function(u) {
+		if(!u) return "";
+		if(u.getGroupId() > 0) return ""; // This is not correct/complete as we can still show a user typing
 
+		if(u.isTyping()) return "typing...";
+		if(u.isChatting()) return "chatting with you...";
+		if(u.isOnline()) return "Online";
+		return "";
+	}
+
+	$scope.getLastMessageColor = function(m) {
+		var profile = m['profile'];
+		if(profile.isTypingInGroup(m['groupid'])) return "#008800";
+		return "#000000";
+	}
 
 	$scope.getMessageStatusColor = function(m){
 		// MesiboLog("getMessageStatusColor", m);
@@ -936,6 +950,11 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return 0;
 	};
 
+	$scope.Mesibo_OnActivity = async function(m, activity, value) {
+		// calling refresh is not optimized but keep it for now
+		$scope.refresh();
+	}
+
 	function getCurrentDate(){
 		var d = {};
 		const date = new Date();
@@ -953,7 +972,12 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 	$scope.onKeydown = function(event){
 		MesiboLog("onKeydown". event);
-		event.preventDefault();
+		if(event.keyCode === 13) 
+			$scope.sendMessage();
+		else 
+			$scope.selected_user.sendActivity($scope.mesibo.random(), MESIBO_ACTIVITY_TYPING, 0, 7500);
+
+		//event.preventDefault();
 	}
 
 	//Send text message to peer(selected user) by reading text from input area

@@ -19,9 +19,7 @@ This repository contains the source code for the Mesibo Sample Web apps built us
 - Multi-Tab popup
 
 ### Features under implementation
-- Sending typing indicators and activity 
 - Date header in the message area
-- Reply to Messages
 
 ## Instructions
 All these demos require a mesibo user token which you can configure in `config.js` or use login screen to generate it. 

@@ -65,7 +65,7 @@
                                     <div class="small last-message" ng-attr-title="{{getUserLastMessage(u)}}">
                                         <i ng-class="getMessageStatusClass(u)" ng-style = "{'color':getMessageStatusColor(u)}"></i>
                                         <i ng-class="getFileIcon(u)" style="color: grey;"></i>
-                                        {{getUserLastMessage(u)}}
+					<span ng-style = "{'color':getLastMessageColor(u)}">{{getUserLastMessage(u)}}</span>
                                     </div>
                                 </div>
                                 <div class="flex-grow-1 text-right">
@@ -173,7 +173,7 @@
                             <a href="#"><img ng-src='{{getUserPicture(selected_user)}}' ng-click="showProfile(selected_user)" class="img-fluid rounded-circle mr-2" style="height:50px;" id="pic" onerror="imgError(this)" ></a>
                             <div class="d-flex flex-column">
                                 <div class="text-white font-weight-bold" id="name">{{getUserName(selected_user)}}</div>
-                                <div class="text-white small" id="details" style="cursor: default;" ng-show="activity || selected_user.membersString">{{activity || selected_user.membersString}}</div> 
+                                <div class="text-white small" id="details" style="cursor: default;" ng-show="getUserActivity(selected_user)">{{ getUserActivity(selected_user)}}</div> 
                             </div>
                             <div class="d-flex flex-row align-items-center ml-auto">
                                 <a href="#"><i ng-click="clickUploadFile()" id="file-upload" class="fas fa-paperclip mx-2 text-white d-none d-md-block"></i></a>
@@ -276,7 +276,7 @@
                         <!-- Input -->
                         <div ng-class = "{'d-flex justify-self-end align-items-center flex-row': message_area_show, 'd-none justify-self-end align-items-center flex-row': !message_area_show}" id="input-area" >
                             <a href="#" style="display: none;"><i class="far fa-smile text-muted px-3" style="font-size:1.5rem;"></i></a>
-                            <input style="margin-left: 10px;" ng-model="input_message_text" ng-change="isLinkPreview && inputTextChanged()" ng-keydown="$event.keyCode === 13 && sendMessage()" type="text" name="message" id="input" placeholder="Type a message" class="flex-grow-1 border-0 px-3 py-2 my-3 rounded shadow-sm">
+                            <input style="margin-left: 10px;" ng-model="input_message_text" ng-change="isLinkPreview && inputTextChanged()" ng-keydown="onKeydown($event)" type="text" name="message" id="input" placeholder="Type a message" class="flex-grow-1 border-0 px-3 py-2 my-3 rounded shadow-sm">
                             <i class="fas fa-paper-plane text-muted px-3" style="cursor:pointer;" ng-click="sendMessage()"></i>
                         </div>
                     </div>
