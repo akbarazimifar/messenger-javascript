@@ -445,6 +445,33 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return p;
 	}
 	
+	$scope.hasPicture = function(m) {
+		var p = $scope.getProfileFromMessage(m);
+		if(!p) return false;
+		var pic = p.getThumbnail();
+		if(pic && pic.length > 10) return true;
+		return false;
+	}
+
+	$scope.getFirstLetter = function(m) {
+		var p = $scope.getProfileFromMessage(m);
+		if(!p) return '*';
+		var name = p.getNameOrAddress();
+		return name[0];
+	}
+	
+	$scope.getLetterColor = function(m) {
+		var p = $scope.getProfileFromMessage(m);
+		var colors = ["#e6d200", "#f58559", "#f9a43e", "#e4c62e",
+		            "#67bf74", "#59a2be", "#2093cd", "#ad62a7"];
+		if(!p) return colors[0];
+		var name = p.getNameOrAddress();
+		var l = name.length;
+		if(!l) return colors[0];
+		var c = name.charCodeAt(l-1)&7;
+		return colors[c];
+	}
+
 	$scope.getPictureFromMessage = function(m) {
 		var p = $scope.getProfileFromMessage(m);
 		return $scope.getUserPicture(p);
@@ -670,6 +697,12 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 			return "";
 
 		return status_color;
+	}
+
+	$scope.isOnlineFromMessage = function(m){
+		var profile = m['profile'];
+		if(profile) return profile.isOnline();
+		return false;
 	}
 
 	$scope.deleteTokenInStorage = function(){

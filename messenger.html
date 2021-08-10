@@ -59,7 +59,12 @@
                         <div ng-repeat="u in summarySession.getMessages()" class="row" id="chat-list" style="overflow-y:auto;" >
                             <!-- ng-style="{'background-color': 'hsl(0, 0%, 90%)' -->
                             <div class="chat-list-item d-flex flex-row w-100 p-2 border-bottom" ng-click="generateMessageArea(getProfileFromMessage(u));" tabindex="0">
-                                <img ng-src= '{{getPictureFromMessage(u)}}' ng-click="showProfileFromMessage(u)" onerror="imgError(this)" class="img-fluid rounded-circle mr-2" style="height:50px;">
+				    <div style="margin:0px;  padding 0px; position: relative;">
+				    <span style="color: #0f0; position: absolute; left: 35px; top: 25px; padding: 0px; font-size: 25px; width:25px; height:25px;" ng-show="isOnlineFromMessage(u)">●</span>
+				    <img ng-show="hasPicture(u)" ng-src= '{{getPictureFromMessage(u)}}' ng-click="showProfileFromMessage(u)" onerror="imgError(this)" class="img-fluid rounded-circle mr-2" style="height:50px;">
+				    <div ng-show="!hasPicture(u)" ng-click="showProfileFromMessage(u)" onerror="imgError(this)" class="img-fluid rounded-circle mr-2" style="height:50px; width:50px; color: White; font-size: 35px; vertical-align:middle; text-align:center;" ng-style = "{'background':getLetterColor(u)}">{{getFirstLetter(u)}}</div>
+				    </div>
+
                                 <div class="w-50">
                                     <div class="name">{{getNameFromMessage(u)}}</div>
                                     <div class="small last-message" ng-attr-title="{{getUserLastMessage(u)}}">
