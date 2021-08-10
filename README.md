@@ -42,5 +42,12 @@ To launch popup demo you can configure the following for setting the displayed u
 const POPUP_DESTINATION_USER = 'xxxx';
 ```
 
+## Support
+Refer to following links before raising any support requests
+
+- https://mesibo.com/documentation/faq/support/#what-information-should-i-provide-when-requesting-technical-support 
+
+- https://mesibo.com/documentation/faq/support/#can-you-help-with-messenger-whatsapp-clone-demo-and-ui-modules
+
 
 
