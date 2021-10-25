@@ -673,7 +673,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 		if(u.isTyping()) return "typing...";
 		if(u.isChatting()) return "chatting with you...";
-		if(u.isOnline()) return "Online";
+		if(u.isOnline()) return "online";
 		return "";
 	}
 
@@ -708,9 +708,10 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.deleteTokenInStorage = function(){
 		localStorage.removeItem("MESIBO_MESSENGER_TOKEN");
 	}
-	$scope.logout = function(){
+	
+	$scope.logout = function(deleteToken){
 		$('#logoutModal').modal("show");
-		$scope.deleteTokenInStorage();
+		if(deleteToken) $scope.deleteTokenInStorage();
 		$scope.mesibo.stop();
 	}
 
@@ -1269,7 +1270,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 		MesiboLog("MesiboNotify.prototype.Mesibo_OnConnectionStatus: " + status);	
 		if(MESIBO_STATUS_SIGNOUT == status || MESIBO_STATUS_AUTHFAIL == status ){
-			$scope.logout();
+			$scope.logout(MESIBO_STATUS_AUTHFAIL == status);
 		}
 
 		var s ="";
