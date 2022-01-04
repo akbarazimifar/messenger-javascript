@@ -170,7 +170,7 @@ let getFileTypeDescription = (f) =>{
 }
 
 let isSentMessage = (status) =>{
-        if(status == MESIBO_MSGSTATUS_RECEIVEDREAD  || status == MESIBO_MSGSTATUS_RECEIVEDNEW)
+        if(status == MESIBO_MSGSTATUS_RECEIVEDREAD  || status == MESIBO_MSGSTATUS_RECEIVEDNEW || MESIBO_MSGSTATUS_WIPED == status || MESIBO_MSGSTATUS_DELETED == status)
             return false;
         else
             return true;

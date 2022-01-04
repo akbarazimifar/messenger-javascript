@@ -61,8 +61,8 @@
                             <div class="chat-list-item d-flex flex-row w-100 p-2 border-bottom" ng-click="generateMessageArea(getProfileFromMessage(u));" tabindex="0">
 				    <div style="margin:0px;  padding 0px; position: relative;">
 				    <span style="color: #0f0; position: absolute; left: 35px; top: 25px; padding: 0px; font-size: 25px; width:25px; height:25px;" ng-show="isOnlineFromMessage(u)">●</span>
-				    <img ng-show="hasPicture(u)" ng-src= '{{getPictureFromMessage(u)}}' ng-click="showProfileFromMessage(u)" onerror="imgError(this)" class="img-fluid rounded-circle mr-2" style="height:50px;">
-				    <div ng-show="!hasPicture(u)" ng-click="showProfileFromMessage(u)" onerror="imgError(this)" class="img-fluid rounded-circle mr-2" style="height:50px; width:50px; color: White; font-size: 35px; vertical-align:middle; text-align:center;" ng-style = "{'background':getLetterColor(u)}">{{getFirstLetter(u)}}</div>
+				    <img ng-show="hasPicture(u)" ng-src= '{{getPictureFromMessage(u)}}' onerror="imgError(this)" class="img-fluid rounded-circle mr-2" style="height:50px;">
+				    <div ng-show="!hasPicture(u)" onerror="imgError(this)" class="img-fluid rounded-circle mr-2" style="height:50px; width:50px; color: White; font-size: 35px; vertical-align:middle; text-align:center;" ng-style = "{'background':getLetterColor(u)}">{{getFirstLetter(u)}}</div>
 				    </div>
 
                                 <div class="w-50">
@@ -93,7 +93,7 @@
                                 <div class="row" id="available-userlist" style=" background:white;">
                                     <span ng-show="!hasContacts()" style="text-align: center"> <i style="color: grey; padding-left: 70px; margin-top: 10px;">You have no existing contacts</i></span>  
                                     <div ng-repeat="u in getContacts() track by $index" class="chat-list-item d-flex flex-row w-100 p-2 border-bottom " style="margin-left: 15px" ng-click="hideAvailableUsers(); generateMessageArea(u);">
-                                        <img ng-src='{{getUserPicture(u)}}' class="img-fluid rounded-circle mr-2" style="height:50px;" onerror="imgError(this)" ng-click="showProfile(u)">
+                                        <img ng-src='{{getUserPicture(u)}}' class="img-fluid rounded-circle mr-2" style="height:50px;" onerror="imgError(this)">
                                         <div class="w-50">
                                             <div class="name">{{getUserName(u)}}</div>
                                             <div class="small last-message" ng-attr-title="{{getUserStatus(u)}}">{{getUserStatus(u)}}</div>
@@ -114,19 +114,18 @@
 			      <!-- <img alt="Profile Photo" class="img-fluid rounded-circle my-5 justify-self-center mx-auto" id="profile-pic" ng-src="{{getUserPicture(display_profile)}}"> -->
                               <input type="file" id="profile-pic-input" class="d-none">
                               <div class="bg-white px-2 py-1">
-                                <div class="text-muted mb-2 border-bottom"><label for="input-name"><h3>{{getUserName(display_profile)}}</h3></label></div>
+                                <div class="text-muted text-center"><h4>{{getUserName(display_profile)}}</h4></div>
+				<div class="text-center text-info" ng-if="display_profile.getAddress()"><h6>+{{display_profile.getAddress()}}</h6></div>
+                                <div class="text-muted mb-2 border-bottom text-center">{{display_profile.getStatus()}}</div>
                                 <!-- <input type="text" name="name" id="input-name" class="w-100 border-0 py-2 profile-input"> -->
                               </div>
                               <!-- <div class="text-muted p-3 small">
                                 This name will be visible to your Mesibo contacts.
                               </div> -->
-                              <div class="bg-white px-2 py-1">
-                                <div class="text-muted mb-2"><label for="input-about">Status</label></div>
-                                <div class="small border-bottom">{{display_profile.getStatus()}}</div>
-
-                                <div class="text-muted mb-2" ng-if="display_profile.getAddress()"><label for="input-about">Phone</label></div>
-                                <div class="small border-bottom" ng-if="display_profile.getAddress()">{{display_profile.getAddress()}}</div>
-                                <!-- <input type="text" name="name" id="input-about" value="" class="w-100 border-0 py-2 profile-input"> -->
+                              <div class="bg-white px-2 py-1" ng-if="display_profile.getAddress() && !display_profile.isSelfProfile()">
+				<div class="text-center">
+				<button type="button" class="btn btn-outline-danger flex-grow-1 px-3 py-2" ng-click="BlockUser(display_profile)">{{isBlocked(display_profile)?"Unblock":"Block"}} User</button>
+				</div>
                               </div>
                                                       
                               <span ng-if="membersList.length" class="px-2" style="color: grey">{{membersList.length}} Members</span>
@@ -135,7 +134,7 @@
                                 <div class="row" id="group-members" style=" background:white;">                                   
                                     <div ng-repeat="u in membersList" class="chat-list-item d-flex flex-row w-100 p-2 border-bottom " style="margin-left: 15px" >
                                         <img ng-src="{{getUserPicture(u['member'])}}" class="img-fluid rounded-circle mr-2" style="height:50px;" onerror="imgError(this)" ng-click="showProfile(u['member'])">
-                                        <div class="w-50" ng-click="hideAvailableUsers(); generateMessageArea(u['member']);">
+                                        <div class="w-50" ng-click="onMemberClick(u['member']);">
                                             <div class="name">{{getUserName(u['member'])}}</div>
                                             <div class="small last-message">{{getMemberType(u['type'])}}</div>
                                         </div>
@@ -156,7 +155,7 @@
                                 <div class="row" id="available-userlist" style=" background:white;">
                                     <span ng-show="hasContacts()" style="text-align: center"> <i style="color: grey; padding-left: 70px; margin-top: 10px;">You have no existing contacts</i></span>  
                                     <div ng-repeat="u in getContacts() track by $index" class="chat-list-item d-flex flex-row w-100 p-2 border-bottom " style="margin-left: 15px" ng-click="forwardMessageTo(u); hideForwardList()">
-                                        <img ng-src='{{getUserPicture(u)}}' class="img-fluid rounded-circle mr-2" style="height:50px;" onerror="imgError(this)" ng-click="showProfile(u)">
+                                        <img ng-src='{{getUserPicture(u)}}' class="img-fluid rounded-circle mr-2" style="height:50px;" onerror="imgError(this)">
                                         <div class="w-50">
                                             <div class="name">{{getUserName(u)}}</div>
                                             <div class="small last-message" ng-attr-title="getUserStatus(u)">{{getUserStatus(u)}}</div>
@@ -176,11 +175,11 @@
                                 <i class="fas fa-arrow-left p-2 mr-2 text-white" style="font-size: 1.5rem; cursor: pointer;"></i>
                             </div>
                             <a href="#"><img ng-src='{{getUserPicture(selected_user)}}' ng-click="showProfile(selected_user)" class="img-fluid rounded-circle mr-2" style="height:50px;" id="pic" onerror="imgError(this)" ></a>
-                            <div class="d-flex flex-column">
+                            <div class="d-flex flex-column" ng-click="showProfile(selected_user)">
                                 <div class="text-white font-weight-bold" id="name">{{getUserName(selected_user)}}</div>
                                 <div class="text-white small" id="details" style="cursor: default;" ng-show="getUserActivity(selected_user)">{{ getUserActivity(selected_user)}}</div> 
                             </div>
-                            <div class="d-flex flex-row align-items-center ml-auto">
+                            <div class="d-flex flex-row align-items-center ml-auto" ng-hide="isBlocked(selected_user)">
                                 <a href="#"><i ng-click="clickUploadFile()" id="file-upload" class="fas fa-paperclip mx-2 text-white d-none d-md-block"></i></a>
                                 <a href="#"><i ng-show="selected_user.getGroupId()==0" id="video-button" class="fas fa-video mx-2 text-white" ng-click="makeVideoCall()"></i></a>
                                 <a href="#"><i ng-show="selected_user.getGroupId()==0" id="audio-button" class="fas fa-phone fa-flip-horizontal mx-2 text-white" ng-click="makeVoiceCall()"></i></a>
@@ -197,7 +196,7 @@
                             <i class="fa fa-plus text-white" aria-hidden="true" ng-click="showAvailableUsers()" style="cursor:pointer; float: right; padding-left: 2px; font-size: 10px; padding-top: 5px;" title = "New Chat"></i>
                             <i class="fas fa-comment-alt text-white" aria-hidden="true" ng-click="showAvailableUsers()" style="cursor:pointer; float: right;padding-top: 5px;" title="New Chat"></i>
                             </button>
-                            <div ng-repeat="m in getMessages()" on-finish-render="onMessagesRendered" ng-show="m.message || isFileMsg(m)" ng-class="{'align-self-end self p-1 mx-4 rounded bg-white shadow-sm message-item': isSent(m), 'align-self-start p-1 mx-4 rounded bg-white shadow-sm message-item': isReceived(m)}" style="margin-top: 4px">
+                            <div ng-repeat="m in getMessages()" on-finish-render="onMessagesRendered" ng-show="isMessageVisible(m)" ng-class="{'align-self-end self p-1 mx-4 rounded bg-white shadow-sm message-item': isSent(m), 'align-self-start p-1 mx-4 rounded bg-white shadow-sm message-item': isReceived(m)}" style="margin-top: 4px">
                                 <div class="small font-weight-bold text-primary" ng-style = "{'display': m.groupid && m.peer != selected_user.getAddress()? 'block':'none'}">
                                     {{getSenderNameFromMessage(m)}}
                                 </div>
@@ -227,7 +226,7 @@
                                 <!-- Link Preview End -->
                                 <!-- File Preview Start -->
                                 <!-- Check m.fileurl!="" -->
-                                <div ng-show='{{isFileMsg(m)}}' ng-class = "{'': isFileMsg(m), 'd-flex flex-row': !isFileMsg(m)}">
+                                <div ng-show='isFileMsg(m)' ng-class = "{'': isFileMsg(m), 'd-flex flex-row': !isFileMsg(m)}">
                                     <a ng-href="{{m.launchurl? m.launchurl: m.fileurl}}" target="_blank" >
                                         <div ng-show='isImageMsg(m)'><img imageonload ng-src= "{{m.fileurl}}" ng-style="{'height': MAX_MEDIA_HEIGHT, 'max-width': MAX_MEDIA_WIDTH, 'min-width': MIN_MEDIA_WIDTH}" onload="adjustImageDims(this)" style="cursor:pointer;"/>
                                         </div>
@@ -247,7 +246,7 @@
                                 </div>
                                 <!-- File Preview End -->
                                 <div class="d-flex justify-content-between">
-                                    <div ng-show="m.message" class="body m-1 mr-2" style="cursor: default;">{{m.message}}</div>
+                                    <div ng-show="getMessageText(m)" class="body m-1 mr-2" style="cursor: default;">{{getMessageText(m)}}</div>
                                     <div  class="time ml-auto small text-right flex-shrink-0 align-self-end text-muted" style="width:75px; cursor: default;">
                                         {{m.date.time}}
                                         <i ng-class= "getMessageStatusClass(m)" ng-style = "{'color':getMessageStatusColor(m) }" ></i>
@@ -281,8 +280,11 @@
                         <!-- Input -->
                         <div ng-class = "{'d-flex justify-self-end align-items-center flex-row': message_area_show, 'd-none justify-self-end align-items-center flex-row': !message_area_show}" id="input-area" >
                             <a href="#" style="display: none;"><i class="far fa-smile text-muted px-3" style="font-size:1.5rem;"></i></a>
-                            <input style="margin-left: 10px;" ng-model="input_message_text" ng-change="isLinkPreview && inputTextChanged()" ng-keydown="onKeydown($event)" type="text" name="message" id="input" placeholder="Type a message" class="flex-grow-1 border-0 px-3 py-2 my-3 rounded shadow-sm">
-                            <i class="fas fa-paper-plane text-muted px-3" style="cursor:pointer;" ng-click="sendMessage()"></i>
+                            <input style="margin-left: 10px;" ng-model="input_message_text" ng-change="isLinkPreview && inputTextChanged()" ng-keydown="onKeydown($event)" type="text" name="message" id="input" placeholder="Message" ng-hide="isBlocked(selected_user)" class="flex-grow-1 border-0 px-3 py-2 my-3 rounded shadow-sm">
+                            <i class="fas fa-paper-plane text-muted px-3" style="cursor:pointer;" ng-hide="isBlocked(selected_user)" ng-click="sendMessage()"></i>
+
+		 	<button type="button" class="btn btn-light flex-grow-1 px-3 py-2" ng-show="isBlocked(selected_user)" ng-click="BlockUser(selected_user)">Unblock User</button>
+
                         </div>
                     </div>
                 </div>

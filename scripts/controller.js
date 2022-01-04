@@ -252,7 +252,8 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.getContacts = function(){
-		return $scope.mesibo.getSortedProfiles();
+		var c = $scope.mesibo.getSortedProfiles();
+		return c;
 	}
 	
 	$scope.hasContacts = function(){
@@ -328,6 +329,29 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return !isSentMessage(msg.status);
 	}
 
+	$scope.isMessageVisible = function(m) {
+		if(m.message || m.isDeleted() || $scope.isFileMsg(m)) return true;
+		return false;
+	}
+	
+	$scope.getMessageText = function(m) {
+		if(m.isDeleted()) return "This message was deleted";
+		return m.message;
+	}
+	
+	$scope.isBlocked = function(p) {
+		if(!p) return false;
+		return p.isBlocked();
+	}
+	
+	$scope.BlockUser = function(p) {
+		var isBlocked = p.isBlocked();
+		p.setContact(true);
+		p.subscribe(true);
+		p.block(!isBlocked);
+		p.save();
+		return true;
+	}
 
 	$scope.generateMessageArea = function(contact){
 		MesiboLog(contact);
@@ -350,10 +374,16 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.scrollToLastMsg();
 	}
 
+	$scope.onMemberClick = function(p) {
+		$scope.hideProfileSettings(); 
+		if(p.isSelfProfile()) return;
+		$scope.generateMessageArea(p);
+		$scope.refresh();
+	}
 
 	$scope.setSelectedUser = function(user){
 		$scope.selected_user = user;
-		$scope.refresh()
+		$scope.refresh();
 	}
 
 	$scope.showContactForm = function(){
@@ -519,6 +549,10 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		if(type == 1) return "Group Owner";
 		if(type == 2) return "Group Admin";
 		return "Member";
+	}
+
+	$scope.getMemberInfo = function(p){
+		return "";
 	}
 
 	$scope.getUserLastMessage = function(m){
@@ -700,6 +734,8 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.isOnlineFromMessage = function(m){
+		return false;
+
 		var profile = m['profile'];
 		if(profile) return profile.isOnline();
 		return false;
@@ -754,8 +790,10 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 	
 	$scope.getMessages = function() {
-		if($scope.messageSession)
-			return $scope.messageSession.getMessages();
+		if($scope.messageSession) {
+			var m =  $scope.messageSession.getMessages();
+			return m;
+		}
 		return [];
 	}
 
@@ -1005,7 +1043,6 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.onKeydown = function(event){
-		MesiboLog("onKeydown". event);
 		if(event.keyCode === 13) 
 			$scope.sendMessage();
 		else 
