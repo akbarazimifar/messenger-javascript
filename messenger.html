@@ -55,8 +55,8 @@
 
 
                         <!-- Chat List = Left Side -->
-                        <span ng-show="!(summarySession && summarySession.getMessages().length)" style="text-align: center"> <i style="color: grey">You have no messages </i></span>  
-                        <div ng-repeat="u in summarySession.getMessages()" class="row" id="chat-list" style="overflow-y:auto;" >
+                        <span ng-show="!(getSummary().length)" style="text-align: center"> <i style="color: grey">You have no messages </i></span>  
+                        <div ng-repeat="u in getSummary()" class="row" id="chat-list" style="overflow-y:auto;" >
                             <!-- ng-style="{'background-color': 'hsl(0, 0%, 90%)' -->
                             <div class="chat-list-item d-flex flex-row w-100 p-2 border-bottom" ng-click="generateMessageArea(getProfileFromMessage(u));" tabindex="0">
 				    <div style="margin:0px;  padding 0px; position: relative;">

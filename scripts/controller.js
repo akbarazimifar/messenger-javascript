@@ -121,7 +121,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.isConnected = false;
 	$scope.isLoggedIn = false;
 	$scope.connection_status = '';
-	$scope.summarySession = {};
+	$scope.summarySession = null;
 	$scope.msg_read_limit_reached = false;
 	$scope.users_synced = false;
 	$scope.scroll_messages = null;
@@ -789,6 +789,14 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.summarySession.read(MAX_MESSAGES_READ_SUMMARY);
 	}
 	
+	$scope.getSummary = function() {
+		if($scope.summarySession) {
+			var m =  $scope.summarySession.getMessages();
+			return m;
+		}
+		return [];
+	}
+	
 	$scope.getMessages = function() {
 		if($scope.messageSession) {
 			var m =  $scope.messageSession.getMessages();
@@ -898,7 +906,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.refresh();
 	}
 
-	$scope.deleteSelectedMessage = function(m){
+	$scope.deleteSelectedMessage = async function(m){
 		MesiboLog("deleteSelectedMessage", m);
 		if(!m)
 			return;
@@ -910,7 +918,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		if($scope.mesibo && $scope.mesibo.deleteMessage){
 			MesiboLog("deleteSelectedMessage with id: ", id);	    		
 			$scope.messageSession.deleteMessage(id);
-			$scope.mesibo.deleteMessage(id);		
+			await $scope.mesibo.deleteMessage(id);		
 		}
 
 		$scope.refresh();
