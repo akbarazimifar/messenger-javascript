@@ -924,6 +924,14 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.refresh();
 	}
 
+	$scope.deleteMessages = async function() {
+		if(!$scope.selected_user)
+			return;
+		
+		await $scope.mesibo.deleteMessages(null, $scope.selected_user.getAddress(), $scope.selected_user.getGroupId(), 0);	
+		$scope.refresh();
+	}
+
 	$scope.forwardMessageTo = function(to){
 		MesiboLog("forwardMessageTo", to);
 		if(!to)
