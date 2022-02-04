@@ -746,9 +746,9 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 	
 	$scope.logout = function(deleteToken){
-		$('#logoutModal').modal("show");
 		if(deleteToken) $scope.deleteTokenInStorage();
 		$scope.mesibo.stop();
+		window.location.replace("index.html");
 	}
 
 	$scope.getFileIcon = function(f){

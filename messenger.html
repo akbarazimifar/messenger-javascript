@@ -34,7 +34,7 @@
                         <div class="row d-flex flex-row align-items-center p-2" id="navbar">
                             <img ng-src ="{{getUserPicture(getSelfProfile())}}" class="img-fluid rounded-circle mr-2" style="max-height:48px; cursor:pointer;" ng-click="showProfile(getSelfProfile())" onerror="imgError(this)" id="display-pic">
                             <div>
-                                <div class="text-white font-weight-bold" id="username"></div>
+			        <div class="text-white font-weight-bold" id="username">{{getUserName(getSelfProfile())}}</div>
                                 <div class="text-white small">{{connection_status}}</div>
                             </div>
                             <div class = "col-sm col-xs heading-compose  float-xs-right">
