@@ -339,8 +339,14 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return m.message;
 	}
 	
+	$scope.getLastSeen = function(p) {
+		if(!p) return -1;
+		return p.getLastSeen();
+	}
+	
 	$scope.isBlocked = function(p) {
 		if(!p) return false;
+		this.getLastSeen(p);
 		return p.isBlocked();
 	}
 	
@@ -537,6 +543,25 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.getUserName = function(user){
 		if(!user) return "";
 		return user.getNameOrAddress('+');
+	}
+	
+	$scope.getLastSeen = function(user){
+		if(!user) return "";
+		var lastseen = user.getLastSeen();
+		if(lastseen == 0)
+			return "Online";
+		if(lastseen < 0)
+			lastseen = "Never";
+		else if(lastseen < 60)
+			lastseen = "Few seconds back";
+		else if(lastseen < 3600)
+			lastseen = parseInt(lastseen/60) + " minutes back";
+		else if(lastseen < 3600*24)
+			lastseen = parseInt(lastseen/3600) + " hours back";
+		else
+			lastseen = parseInt(lastseen/(3600*24)) + " days back";
+
+		return "Last Seen: " + lastseen;
 	}
 	
 	$scope.getUserStatus = function(user){
@@ -1144,6 +1169,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 	$scope.hangupVideoCall = function(){
 		$('#videoModal').modal("hide");
+		$('#answerModal').modal("hide");
 		$scope.is_video_call = false;
 		$scope.call.hangup();
 		$scope.refresh();
@@ -1151,6 +1177,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 	$scope.hangupAudioCall = function(){
 		$('#voiceModal').modal("hide");
+		$('#answerModal').modal("hide");
 		$scope.is_voice_call = false;
 		$scope.call.hangup();
 		$scope.refresh();
