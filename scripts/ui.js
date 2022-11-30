@@ -61,6 +61,14 @@ let getStatusClass = (status) => {
                         //statusTick = "fas fa-check-circle";
                         statusTick = "las la-check-double";
                         break;
+                
+		case MESIBO_MSGSTATUS_CALLMISSED:
+		case MESIBO_MSGSTATUS_CALLINCOMING:
+		case MESIBO_MSGSTATUS_CALLOUTGOING:
+                        //statusTick = "fas fa-check-circle";
+                        statusTick = "las la-phone";
+                        break;
+
 
                 default:
                         statusTick = "far fa-clock";

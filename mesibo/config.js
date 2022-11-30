@@ -52,7 +52,7 @@
 var MESIBO_ACCESS_TOKEN = ""; 
 
 /* App ID used to create a user token. */
-var MESIBO_APP_ID = "com.mesibo.firstapp";
+var MESIBO_APP_ID = "com.mesibo.jsdemo";
 
 /* If you are hosting Mesibo backend on your own server, change this accordingly.
  * Refer https://github.com/mesibo/messenger-app-backend
@@ -68,13 +68,10 @@ const MESIBO_DEFAULT_GROUP_IMAGE = "images/profile/default-group-icon.jpg";
 /* Toggle for synchronizing messages
 *  See https://mesibo.com/documentation/tutorials/get-started/synchronization/
 */
-var isMessageSync = false;
+var isMessageSync = true;
 
 /*Optional link preview*/
 const isLinkPreview = false; //Set to false if link preview not required
-const LINK_PREVIEW_SERVICE = "http://api.linkpreview.net/";
-const LINK_PREVIEW_KEY = ""; // Access Key
-const LINK_DEFAULT_IMAGE = "images/file/default-link-icon.jpg"
 
 /************************ Messenger Config End *****************************/
 

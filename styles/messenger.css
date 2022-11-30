@@ -84,7 +84,7 @@
 	position:relative;
 	max-width: 75%;
 	word-break: break-word;
-	border-radius:10px !important;
+	border-radius:5px !important;
 }
 .message-item.self {
 	background: #d5f5ec!important;

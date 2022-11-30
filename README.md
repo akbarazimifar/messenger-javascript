@@ -2,8 +2,6 @@
 This repository contains the source code for the Mesibo Sample Web apps built using Mesibo Javascript API.
 
 - **messenger** - A Whatsapp like messaging app that loads a list of users on the left and messages on the right 
-- **popup** - A simple chat popup 
-- **multi-tab popup** - A chat popup that can be opened simultaneously across multiple tabs 
  
 > Please note that this is currently **under development** and will be continuously updated. 
 
@@ -34,13 +32,6 @@ The login code is completely independent of demos which makes it easier for you 
 To login, in the login screen provide the phone number along with country code starting with `+` For Example, If your country code is `1 (United States)` and your ten-digit phone number is `XXXXXXXXXX`, enter your phone number as `+1XXXXXXXXXX` (without any spaces or special characters in between)
 
 You need to log in to your mesibo account to generate OTP. 
-
-## Popup
-To launch popup demo you can configure the following for setting the displayed user avatar and destination user(to which all messages will be sent) in `config.js` and launch `popup.html`
-
-```javascript
-const POPUP_DESTINATION_USER = 'xxxx';
-```
 
 ## Support
 Refer to following links before raising any support requests

@@ -1,6 +1,6 @@
 //controller.js
 
-/** Copyright (c) 2021 Mesibo
+/** Copyright (c) 2022 Mesibo
  * https://mesibo.com
  * All rights reserved.
  *
@@ -129,14 +129,12 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.new_contact_name = '';
 	$scope.new_contact_phone = '';
 
-	$scope.mesibo_user_messages = [];
+	$scope.messages = [];
 
 	$scope.selected_user = null;
 	$scope.selected_user_count = 0; 
 
 	$scope.forward_message = null;
-
-	$scope.unread_count = {};
 
 	$scope.mesibo = null; 
 
@@ -147,8 +145,9 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.message_area_show = false;
 
 	//Input Area
-	$scope.input_message_text ="";
-	$scope.link_preview = null
+	$scope.input_message_text = "";
+	$scope.link_preview = null;
+	$scope.self_profile_name = "";
 
 	//Calls  
 	$scope.is_answer_call = false;
@@ -269,9 +268,11 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.showProfile = function(p) {
-		MesiboLog("showProfile");
 		if(!p)
 			return;
+		if(p.isSelfProfile()) {
+			$scope.self_profile_name = p.getName();
+		}
 		$scope.display_profile = p; 
 		$scope.membersList = [];
 		if(p.getGroupId() > 0) {
@@ -289,6 +290,10 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.refresh();
 	};
 	
+	$scope.editProfile = function() {
+		$scope.showProfile($scope.getSelfProfile());
+	}
+	
 	$scope.showProfileFromMessage = function(m) {
 		var p = $scope.getProfileFromMessage(m);
 		if(!p)
@@ -299,14 +304,12 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	};
 
 	$scope.hideProfileSettings = function() {
-		MesiboLog("hideProfileSettings");
 		$scope.display_profile = null; 
 		$scope.membersList = [];
 		$scope.refresh();
 	};
 
 	$scope.hideForwardList = function() {
-		MesiboLog("hideForwardList");
 		$scope.forward_message = null; 
 		$scope.refresh();
 	};
@@ -330,13 +333,24 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.isMessageVisible = function(m) {
+		return true;
 		if(m.message || m.isDeleted() || $scope.isFileMsg(m)) return true;
 		return false;
 	}
 	
 	$scope.getMessageText = function(m) {
 		if(m.isDeleted()) return "This message was deleted";
-		return m.message;
+		if(m.isDate()) 
+			return m.getDateVerbal(true, "Today", "Yesterday");
+
+		if(!m.isCall()) 
+			return m.message;
+
+		var type = m.isVideoCall()?"Video":"Audio";
+		var dir = "Missed";
+		if(m.isIncomingCall()) dir = "Incoming";
+		else if(m.isOutgoingCall()) dir = "Outgoing";
+		return dir + " " + type + " call at " + m.getTime();
 	}
 	
 	$scope.getLastSeen = function(p) {
@@ -358,7 +372,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		p.save();
 		return true;
 	}
-
+	
 	$scope.generateMessageArea = function(contact){
 		MesiboLog(contact);
 
@@ -415,8 +429,6 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.addContact = function(){
-		MesiboLog("Add Contact");			
-
 		//cAddress = document.getElementById('contact-address').value;
 		//cGroupid = document.getElementById('contact-group-id').value;
 		if($scope.new_contact_phone.length < 8){
@@ -473,11 +485,11 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 		return false;
 	}
-
+	
 	$scope.getProfileFromMessage = function(m) {
 		if(!m) return null;
-		var p = m['groupProfile'];
-		if(!p) p = m['profile'];
+		var p = m.groupProfile;
+		if(!p) p = m.profile;
 		return p;
 	}
 	
@@ -492,7 +504,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.getFirstLetter = function(m) {
 		var p = $scope.getProfileFromMessage(m);
 		if(!p) return '*';
-		var name = p.getNameOrAddress();
+		var name = p.getNameOrAddress('');
 		return name[0];
 	}
 	
@@ -501,7 +513,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		var colors = ["#e6d200", "#f58559", "#f9a43e", "#e4c62e",
 		            "#67bf74", "#59a2be", "#2093cd", "#ad62a7"];
 		if(!p) return colors[0];
-		var name = p.getNameOrAddress();
+		var name = p.getNameOrAddress('+');
 		var l = name.length;
 		if(!l) return colors[0];
 		var c = name.charCodeAt(l-1)&7;
@@ -519,7 +531,10 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 	
 	$scope.getSenderNameFromMessage = function(m) {
-		return m['profile'].getNameOrAddress();
+		if(null == m || null == m.profile) {
+			return ''; // data object
+		}
+		return m.profile.getNameOrAddress("+");
 	}
 
 	$scope.getUserPicture = function(user){
@@ -561,7 +576,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		else
 			lastseen = parseInt(lastseen/(3600*24)) + " days back";
 
-		return "Last Seen: " + lastseen;
+		return "Last seen: " + lastseen;
 	}
 	
 	$scope.getUserStatus = function(user){
@@ -575,70 +590,40 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		if(type == 2) return "Group Admin";
 		return "Member";
 	}
-
+	
 	$scope.getMemberInfo = function(p){
 		return "";
 	}
 
 	$scope.getUserLastMessage = function(m){
 
-		var profile = m['profile'];
+		var profile = m.profile;
 
-		if(profile.isTypingInGroup(m['groupid'])) return "typing...";
+		if(!profile) {
+			return "";
+		}
+
+		if(profile.isGroup() && profile.isTypingInGroup(m['groupid'])) 
+			return "typing...";
 
 		if(m.filetype)
 			return getFileTypeDescription(m);
 
-		var message = m.message;
-		if(!isValidString(message))
-			return "";
-
-		return message;
+		return this.getMessageText(m);
 	}
 
 	$scope.getUserLastMessageTime = function(m){
-		var date = m.date;
-		if(!isValid(date))
-			return "";
-
-		var date_ = date.date;
-		if(!isValidString(date_))
-			return "";
-
-		var time = date.time;
-		if(!isValidString(time))
-			return "";
-
-		if(date_ != 'Today')
-			time = date_;
-
-		return time;
+		if(m.date.daysElapsed) return m.getDateVerbal(true, "Today", "Yesterday");
+		return m.getTime();
 	}
 
 	$scope.getUserUnreadCount = function(m, index){
 		var p = $scope.getProfileFromMessage(m);
 
-		var identifier = p.getGroupId() ? p.getGroupId() : p.getAddress();
-		var ucount = $scope.unread_count[identifier];
-
-		if(ucount != undefined){
-			if(0 == ucount)
-				ucount = "";
-
-			//MesiboLog("getUserUnreadCount", "id: "+ identifier, "ucount: "+ ucount, "m:", $scope.unread_count);
-			document.getElementById("unread_count_"+ index).innerHTML = ucount;
-			return ucount;
-		}
-
-		//Restore from history
-		var rs =  $scope.mesibo.readDbSession(p.getAddress(), p.getGroupId(), null,
-			function on_read(count) {
-			});
+		var rs =  p.createReadSession(null);
 
 		rs.getUnreadCount( function on_unread(count){
 			//console.log("getUnreadCount from db", "a: "+ user.getAddress(), "g: "+ user.getGroupId(), "c: "+ count);
-			$scope.unread_count[identifier] = count;
-
 			if(!count)
 				count = "";
 
@@ -665,6 +650,9 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.getFileName = function(m){
 		if(!m)
 			return;
+
+		var name = m.getFileName();
+		if(name) return name;
 
 		if(m.title)
 			return m.title;
@@ -701,28 +689,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 	$scope.inputTextChanged = async function(){
 		MesiboLog('inputTextChanged');
-		//if enabled config isLinkPreview
 		if(isLinkPreview){
-			//xx Bug xx: If link_preview is already present doesn't update
-			if(isValid($scope.link_preview) && isValidString($scope.link_preview.url)){
-				var newUrl = getUrlInText($scope.input_message_text);
-				if(newUrl == $scope.link_preview.url)
-					return; //Make no changes to existing preview
-			}
-
-			var urlInMessage = getUrlInText($scope.input_message_text);
-			if(isValidString(urlInMessage)){
-				MesiboLog("Fetching preview for", urlInMessage)
-				var lp = await $scope.file.getLinkPreviewJson(urlInMessage, LINK_PREVIEW_SERVICE, LINK_PREVIEW_KEY);
-				// var lp = getSampleLinkPreview(); /*For testing */
-				if(isValid(lp)){
-					MesiboLog(lp);
-					$scope.setLinkPreview(lp);
-					$scope.refresh();
-				}
-			}
-			else
-				$scope.link_preview = null;
 		}
 	}
 
@@ -737,8 +704,8 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.getLastMessageColor = function(m) {
-		var profile = m['profile'];
-		if(profile.isTypingInGroup(m['groupid'])) return "#008800";
+		var profile = m.profile;
+		if(profile && profile.isTypingInGroup(m.groupid)) return "#008800";
 		return "#000000";
 	}
 
@@ -749,6 +716,12 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 		if($scope.isReceived(m))
 			return "";
+		
+		if(m.isDate())
+			return "#777777";
+
+		if(m.isCall())
+			return "#CC0000";
 
 		var status = m.status;
 		var status_color = getStatusColor(status);
@@ -757,11 +730,21 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 		return status_color;
 	}
+	
+	$scope.getMessageColor = function(m){
+		if(m.isDate())
+			return "#777777";
 
+		if(m.isCall())
+			return "#CC0000";
+
+		return "#000000";
+	}
+	
 	$scope.isOnlineFromMessage = function(m){
 		return false;
 
-		var profile = m['profile'];
+		var profile = m.profile;
 		if(profile) return profile.isOnline();
 		return false;
 	}
@@ -780,35 +763,28 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return getFileIcon(f);
 	}
 
-	$scope.sessionReadSummary = function(){
-		$scope.summarySession = $scope.mesibo.readDbSession(null, 0, null, 
-			function on_read(result) {
-				// Read handler
-				// Provides a list of users that you have had conversations with
-				// Along with their lastMessage
-				MesiboLog("==> on_read summarySession", result);
-				if(result == undefined || result == null)
-					return;
+	$scope.summaryListener = {};
+	$scope.summaryListener.Mesibo_onMessage = function(m) {
+		if(m && !m.isLastMessage()) 
+			return;
 
-				if(isMessageSync && !result && !$scope.users_synced){
-					MesiboLog("Run out of users to display. Syncing..");
-					$scope.users_synced = true;
-					$scope.syncMessages(this, this.readCount - result);
-				}
-
-				var messages = this.getMessages();
-				if(messages && messages.length > 0){
-					var m = messages[0];
-					$scope.generateMessageArea($scope.getProfileFromMessage(m));
-				}  
-				$scope.refresh()
-			});
-
-		if(!$scope.summarySession){
-			MesiboLog("Invalid summarySession");
-			return -1;
+		if(isMessageSync && !m && !$scope.users_synced){
+			MesiboLog("Run out of users to display. Syncing..");
+			$scope.users_synced = true;
+			$scope.syncMessages(this, this.readCount - result);
 		}
 
+		var msgs = this.getMessages();
+		if(msgs && msgs.length > 0){
+			var m = msgs[0];
+			$scope.generateMessageArea($scope.getProfileFromMessage(m));
+		}
+				
+		$scope.refresh()
+	}
+
+	$scope.sessionReadSummary = function(){
+		$scope.summarySession = new MesiboReadSession($scope.summaryListener);
 		$scope.summarySession.enableSummary(true);
 		$scope.summarySession.readCount = MAX_MESSAGES_READ_SUMMARY;
 		$scope.summarySession.read(MAX_MESSAGES_READ_SUMMARY);
@@ -817,17 +793,13 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.getSummary = function() {
 		if($scope.summarySession) {
 			var m =  $scope.summarySession.getMessages();
-			return m;
+			if(m) return m;
 		}
 		return [];
 	}
 	
 	$scope.getMessages = function() {
-		if($scope.messageSession) {
-			var m =  $scope.messageSession.getMessages();
-			return m;
-		}
-		return [];
+		return $scope.messages;
 	}
 
 	$scope.syncMessages = function(readSession, count, type){
@@ -848,57 +820,86 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 				}
 			});
 	}
+	
+	$scope.Mesibo_onMessage = async function(m) {
+		MesiboLog("$scope.prototype.OnMessage", m);
+		if(isMessageSync && !m){
+			MesiboLog("Run out of messages to display. Syncing..");
+			$scope.msg_read_limit_reached = true;
+			$scope.syncMessages(this, this.readCount, 1);
+		}
+		
+		if(!m) {
+			$scope.refresh();
+			return;
+		}
+
+		if(!m.mid || m.presence)
+			return;
+
+		if(!m.isDestinedFor($scope.selected_user))
+			return;
+		
+		if(m.isRealtimeMessage()) {
+			var prev = null;
+			if($scope.messages.length) {
+				prev = $scope.messages[$scope.messages.length-1];
+			}
+
+			if(m.date == undefined || m.date.daysElapsed == undefined) {
+				var dd = m.date;
+			}
+
+			if(!prev || (!prev.isDate() && prev.date.daysElapsed != m.date.daysElapsed)) {
+				var d = m.cloneDate();
+				$scope.messages.push(d);
+			}
+
+			$scope.messages.push(m);
+		}
+		else  {
+			var prev = null;
+			if($scope.messages.length) {
+				prev = $scope.messages[0];
+			}
+			
+			if(m.date == undefined || m.date.daysElapsed == undefined) {
+				var dd = m.date;
+			}
+
+			if(prev && !prev.isDate() && prev.date.daysElapsed != m.date.daysElapsed) {
+				var d = prev.cloneDate();
+                                $scope.messages.unshift(d);	
+			}  
+			
+			$scope.messages.unshift(m);
+
+			if(m.isLastMessage()) {
+				var d = m.cloneDate();
+                                $scope.messages.unshift(d);	
+			}
+		}
+
+		if(m.isRealtimeMessage() || m.isLastMessage()){
+			$scope.refresh();
+			$scope.scrollToLastMsg();
+		}
+
+		return 0;
+	};
+
+	$scope.Mesibo_onPresence = async function(m) {
+		// calling refresh is not optimized but keep it for now
+		$scope.refresh();
+	}
 
 	$scope.sessionReadMessages = function(user, count){
 		MesiboLog("sessionReadMessages", user);
-		$scope.messageSession =  user.readDbSession(null, 
-			function on_read(result) {
-				// Read handler
-				// result will be equal to the number of messages read
-				MesiboLog("==> on_read messageSession", result);
-
-				if(result == undefined || result == null || result == NaN)
-					return;
-
-				if(isMessageSync && this.readCount && result < this.readCount){
-					MesiboLog("Run out of messages to display. Syncing..");
-					$scope.msg_read_limit_reached = true;
-					$scope.syncMessages(this, this.readCount - result, 1);
-					return;
-				}
-
-				var msgs = this.getMessages();
-
-				if(msgs && msgs.length){
-					$scope.mesibo_user_messages = msgs;
-				}
-
-				if($scope.scroll_messages 
-					&& $scope.scroll_messages.scrollTop == 0
-					&& msgs.length){
-					$scope.scroll_messages.scrollTop = result * 10; 
-				}
-				else{
-					$scope.scrollToLastMsg();
-				}
-
-				$scope.refresh();
-			});
-
-
-		if(!$scope.messageSession){
-			MesiboLog("Invalid messageSession");
-			return -1;
-		}
-
+		$scope.messages.length = 0;
+		$scope.messageSession =  user.createReadSession($scope);
 		$scope.messageSession.enableReadReceipt(true);
 		$scope.messageSession.readCount = count;
 		$scope.messageSession.read(count);
-
-		var identifier = user.getGroupId() ? user.getGroupId() : user.getAddress();
-		if($scope.unread_count[identifier])
-			$scope.unread_count[identifier] = 0
-
 	}
 
 	$scope.readMessages = function(userScrolled){
@@ -909,51 +910,38 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 			$scope.sessionReadMessages($scope.selected_user, MAX_MESSAGES_READ);
 	}
 
-	$scope.update_read_messages = function(m, rid){
-		$scope.messageSession.getMessages = function(){
-			return m;
-		}
-
-		$scope.$applyAsync(function()  {
-			if($scope.scroll_messages){
-				if($scope.mesibo_user_messages &&
-					$scope.mesibo_user_messages.length == m.length)
-					return;
-				$scope.scroll_messages.scrollTop = 50;
-			}
-			else
-				$scope.scrollToLastMsg();
-
-		});
-
-		$scope.mesibo_user_messages = m;
-		MesiboLog("scope.update_read_messages", $scope.messageSession.getMessages());
-		$scope.refresh();
-	}
-
 	$scope.deleteSelectedMessage = async function(m){
-		MesiboLog("deleteSelectedMessage", m);
-		if(!m)
-			return;
+		if(!m) return;
 
-		var id = m.id;
-		if(!id)
-			return;
-
-		if($scope.mesibo && $scope.mesibo.deleteMessage){
-			MesiboLog("deleteSelectedMessage with id: ", id);	    		
-			$scope.messageSession.deleteMessage(id);
-			await $scope.mesibo.deleteMessage(id);		
+		for(var i=0 ; i < $scope.messages.length; i++) {
+			if($scope.messages[i].mid == m.mid) {
+				$scope.messages.splice(i, 1);
+				break;
+			}
 		}
 
+		await m.delete();
+
+		if(!$scope.messages.length) {
+			var s = $scope.getSummary();
+			if(s.length) {
+				$scope.generateMessageArea($scope.getProfileFromMessage(s[0]));
+			}
+		}
 		$scope.refresh();
+		return;
 	}
 
 	$scope.deleteMessages = async function() {
 		if(!$scope.selected_user)
 			return;
-		
-		await $scope.mesibo.deleteMessages(null, $scope.selected_user.getAddress(), $scope.selected_user.getGroupId(), 0);	
+
+		await $scope.selected_user.deleteMessages();
+
+		var s = $scope.getSummary();
+		if(s.length) {
+			$scope.generateMessageArea($scope.getProfileFromMessage(s[0]));
+		}
 		$scope.refresh();
 	}
 
@@ -977,24 +965,11 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 	$scope.forwardSelectedMessage = function(m, to){
 		MesiboLog("forwardSelectedMessage", m, to);
-		if(!(m && to))
+		if(!m || !to)
 			return;
 
-		var p = {};	 
-
-		p.peer =  to.getAddress();
-		p.groupid = to.getGroupId();
-
-		p.expiry = 3600;
-
-		var id = m.id;
-		if(!id)
-			return;
-
-		if($scope.mesibo && $scope.mesibo.forwardMessage){
-			MesiboLog("forwardSelectedMessage with id: ", id, " with params:", p);
-			$scope.mesibo.forwardMessage(p, $scope.mesibo.random(), id);	    			    		
-		}
+		m = m.forward(to);
+		m.send();
 
 		$scope.refresh();
 		$scope.scrollToLastMsg();
@@ -1005,89 +980,14 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		if(!$scope.selected_user)
 			return;
 
-		var p = {};	 
-
-		p.peer =  $scope.selected_user.getAddress();
-		p.groupid = $scope.selected_user.getGroupId();
-
-		p.expiry = 3600;
-
-		var id = m.id;
-		if(!id)
-			return;
-
-		if($scope.mesibo && $scope.mesibo.resendMessage){
-			MesiboLog("resendSelectedMessage with id: ", id, " with params:", p);
-			var r = $scope.mesibo.resendMessage(p, id);
-			MesiboLog("resendSelectedMessage returned", r);	    			    		
-		}
-	}
-
-	$scope.Mesibo_OnMessage = async function(m, data) {
-		MesiboLog("$scope.prototype.OnMessage", m, data);
-		if(!m.id || m.presence)
-			return;
-
-
-		if($scope.is_shared){
-			//Modified message access in case of shared popup 
-			for (var i = $scope.mesibo_user_messages.length - 1; i >= 0; i--) {
-				if($scope.mesibo_user_messages[i].id == m.id){
-					MesiboLog("Mesibo_OnMessage", "Message exists");
-					return;
-				}
-			}
-			$scope.mesibo_user_messages.push(m);
-		}
-
-		$scope.refresh();
-
-		if($scope.selected_user
-			&& $scope.selected_user.getAddress() == m.peer){
-			$scope.scrollToLastMsg();
-		}
-
-		if(!$scope.selected_user) return 0;
-
-		if((m.peer && $scope.selected_user.getAddress() != m.peer)
-			|| (m.groupid && $scope.selected_user.getGroupId() != m.groupid)){
-			var identifier = m.groupid ? m.groupid : m.peer;
-			MesiboLog("update unread for ", identifier);
-			if(!$scope.unread_count[identifier])
-			$scope.unread_count[identifier] = 0;
-
-			$scope.unread_count[identifier] += 1;
-			$scope.refresh();
-		}
-
-		return 0;
-	};
-
-	$scope.Mesibo_OnActivity = async function(m, activity, value) {
-		// calling refresh is not optimized but keep it for now
-		$scope.refresh();
-	}
-
-	function getCurrentDate(){
-		var d = {};
-		const date = new Date();
-		var h = date.getHours() + "";
-		var m = date.getMinutes() + "";
-		if(h.length < 2)
-			h = "0" + h;
-		if(m.length < 2)
-			m = "0" + m;
-		d.time = h + ":" + m;
-		d.yd = "Today";
-
-		return d;
+		m.resend();
 	}
 
 	$scope.onKeydown = function(event){
 		if(event.keyCode === 13) 
 			$scope.sendMessage();
 		else 
-			$scope.selected_user.sendActivity($scope.mesibo.random(), MESIBO_ACTIVITY_TYPING, 0, 7500);
+			$scope.selected_user.sendTyping();
 
 		//event.preventDefault();
 	}
@@ -1100,29 +1000,10 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		if(!value)	
 			return -1;
 
-		if(isLinkPreview && isValid($scope.link_preview)){
-			//If link preview is enabled in configuration
-			var urlInMessage = getUrlInText(value);
-			if(isValidString(urlInMessage)){
-				var m = {};
-				//xx TODO xx Special code for link type is probably required
-				m.filetype = MESIBO_FILETYPE_IMAGE;
-				m.fileurl = linkPreview.image;
-				// urlAsfile.tn = []; //Get Thumbnail if required
-				m.title = linkPreview.title;
-				m.launchurl = linkPreview.url;
-				$scope.selected_user.sendFile($scope.mesibo.random(), m);
+		var m = $scope.selected_user.newMessage();
+		m.message = value;
+		m.send();
 
-				this.scope.link_preview = null;	
-				this.scope.refresh();	
-			}
-		}
-		else{
-			//$scope.mesibo.sendMessage(messageParams, messageParams.id, messageParams.message);
-			$scope.selected_user.sendMessage($scope.mesibo.random(), value);
-		}
-
-		//$scope.mesibo_user_messages.push(messageParams);
 		$scope.input_message_text = "";
 		$scope.refresh();
 		$scope.scrollToLastMsg();
@@ -1261,8 +1142,15 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 	$scope.openPictureRecorder = function(){
 		$('#recorderModal').modal("show");
-		document.getElementById("recorderModalLabel").innerHTML = "Video Recorder";
+		document.getElementById("recorderModalLabel").innerHTML = "Send a Picture";
 		$scope.recorder = new MesiboRecorder($scope, "picture");
+		$scope.recorder.initPictureRecording();
+	}
+	
+	$scope.openVideoRecorder = function(){
+		$('#recorderModal').modal("show");
+		document.getElementById("recorderModalLabel").innerHTML = "Video Recorder";
+		$scope.recorder = new MesiboRecorder($scope, "video");
 		$scope.recorder.initPictureRecording();
 	}
 
@@ -1282,37 +1170,75 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		//Clear selected file button attr
 	}
 
-	$scope.sendFile = function(){
-		var m = {};
-		m.file = $scope.selected_file;
-		m.message = $scope.input_file_caption;
+	$scope.selectProfilePicture = function(){
+		setTimeout(function () {
+			angular.element('#profile-pic-input').trigger('click');
+		}, 0);
+	}
 
-		$scope.selected_user.sendFile($scope.mesibo.random(), m);
+	$scope.onProfileImageSelect = function(element){
+		$scope.$apply(function(scope) {
+			var file = element.files[0];
+			if(!file){
+				MesiboLog("Invalid file");
+				return -1;
+			}
+
+			if(file.size > MAX_FILE_SIZE_SUPPORTED){
+				MesiboLog("Uploaded file larger than supported(10 MB)");
+				alert("Please select a file smaller than 10Mb");
+				return;
+			}
+
+			var c = $scope.mesibo.getSelfProfile();
+			c.setImage(file);
+			c.save();
+
+			$scope.refresh();
+
+			MesiboLog('Reset', element.value);
+			element.value = '';
+
+		});
+	}
+
+	$scope.setSelfProfileName = function(u){
+		var c = $scope.mesibo.getSelfProfile();
+		//c.picture = u.photo;
+		c.setName($scope.self_profile_name);
+		c.save();
+
+		$scope.refresh();
+	}
+
+	$scope.getSelfProfile = function(){
+		return $scope.mesibo.getSelfProfile();
+	}
+
+
+	$scope.setProfilePicture = function(){
+	}
+
+
+	$scope.sendFile = function(){
+		var m = $scope.selected_user.newMessage();
+		m.setContent($scope.selected_file);
+		m.message = $scope.input_file_caption;
+		m.send();
+
 		$scope.input_file_caption = '';
 	}
 
 	$scope.isFileMsg = function(m){
 		return isValid(m.filetype);
+		//return isValid(m.filetype) || m.fileurl.length > 0;
 	}
 
 	$scope.isFailedMessage = function(m){		    
-		if(!m)
-			return false;
-
-		if(!(m['status'] & MESIBO_MSGSTATUS_FAIL))
+		if(!m || !m.isFailed())
 			return false;
 
 		return true;
-	}
-
-	$scope.hostnameFromUrl = function(pUrl){
-		if(!isValidString(pUrl))
-			return "";
-		var hostname = pUrl.replace('http://','').replace('https://','').split(/[/?#]/)[0];
-		if(!isValidString(hostname))
-			return "";
-
-		return hostname;
 	}
 
 	//Message contains URL Preview
@@ -1320,35 +1246,10 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return ($scope.isFileMsg(m) && !isValidString(m.fileurl));
 	}
 
-	$scope.isImageMsg = function(m){
-		if(!$scope.isFileMsg(m))
-			return false;
-		return (MESIBO_FILETYPE_IMAGE == m.filetype);
-	}
-
-	$scope.isVideoMsg = function(m){
-		if(! $scope.isFileMsg(m))
-			return false;
-		return (MESIBO_FILETYPE_VIDEO == m.filetype);
-	}
-
-
-	$scope.isAudioMsg = function(m){
-		if(! $scope.isFileMsg(m))
-			return false;
-		return (MESIBO_FILETYPE_AUDIO == m.filetype);
-	}
-
-	$scope.isOtherMsg = function(m){
-		if(! $scope.isFileMsg(m))
-			return false;
-		return (m.filetype >= MESIBO_FILETYPE_LOCATION);
-	}
-
-	$scope.Mesibo_OnConnectionStatus = function(status){
+	$scope.Mesibo_onConnectionStatus = function(status){
 		$scope.isConnected = false;
 
-		MesiboLog("MesiboNotify.prototype.Mesibo_OnConnectionStatus: " + status);	
+		MesiboLog("MesiboNotify.prototype.Mesibo_onConnectionStatus: " + status);	
 		if(MESIBO_STATUS_SIGNOUT == status || MESIBO_STATUS_AUTHFAIL == status ){
 			$scope.logout(MESIBO_STATUS_AUTHFAIL == status);
 		}
@@ -1369,32 +1270,32 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.connection_status = s;
 		$scope.refresh();
 	}
-	
-	$scope.Mesibo_OnProfileUpdated = function(p){
+
+	$scope.Mesibo_onProfileUpdated = function(p){
 		$scope.refresh();
 	}
 
 	$scope.updateReadPrevious = function(index){
 		MesiboLog("updateReadPrevious");
 		for (var i = index; i >= 0; i--) {
-			if($scope.mesibo_user_messages[i].status == MESIBO_MSGSTATUS_READ)
+			if($scope.messages[i].status == MESIBO_MSGSTATUS_READ)
 				return;
 
-			if($scope.mesibo_user_messages[i].status == MESIBO_MSGSTATUS_DELIVERED)
-				$scope.mesibo_user_messages[i].status = MESIBO_MSGSTATUS_READ;
+			if($scope.messages[i].status == MESIBO_MSGSTATUS_DELIVERED)
+				$scope.messages[i].status = MESIBO_MSGSTATUS_READ;
 		}
 	}
 
-	$scope.Mesibo_OnMessageStatus = function(m){
-		MesiboLog("$scope.Mesibo_OnMessageStatus", m);
+	$scope.Mesibo_onMessageStatus = function(m){
+		MesiboLog("$scope.Mesibo_onMessageStatus", m);
 
 		//In case of shared popup, need to manually update message across all tabs
-		for (var i = $scope.mesibo_user_messages.length - 1; i >= 0 && $scope.is_shared; i--) {
-			if($scope.mesibo_user_messages[i].id == m.id){
-				$scope.mesibo_user_messages[i].status = m.status;
+		for (var i = $scope.messages.length - 1; i >= 0 && $scope.is_shared; i--) {
+			if($scope.messages[i].mid == m.mid){
+				$scope.messages[i].status = m.status;
 
 				if(m.status == MESIBO_MSGSTATUS_READ && i
-					&& $scope.mesibo_user_messages[i-1].status
+					&& $scope.messages[i-1].status
 					!= MESIBO_MSGSTATUS_READ){ //Make all previous delivered msgs to read
 					$scope.updateReadPrevious(i - 1);
 				}
@@ -1406,7 +1307,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 
-	$scope.Mesibo_OnCall = function(callid, from, video){
+	$scope.Mesibo_onCall = function(callid, from, video){
 		if(video){
 			$scope.is_video_call = true;
 			$scope.mesibo.setupVideoCall("localVideo", "remoteVideo", true);
@@ -1422,7 +1323,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.showRinging();
 	}
 
-	$scope.Mesibo_OnCallStatus = function(callid, status){
+	$scope.Mesibo_onCallStatus = function(callid, status){
 
 		var s = "";
 
@@ -1472,29 +1373,11 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		}
 	}
 
-	$scope.setSelfProfile = function(u){
-		if(!u)
-			return;
-
-		
-		var c = $scope.mesibo.getSelfProfile();
-		//c.picture = u.photo;
-		c.setName(u.name);
-		c.setStatus(u.status);
-		c.save();
-
-		$scope.refresh();
-	}
-	
-	$scope.getSelfProfile = function(){
-		return $scope.mesibo.getSelfProfile();
-	}
-
 	$scope.init_messenger = function(){
 		MesiboLog("init_messenger called"); 
 		$scope.sessionReadSummary();     
 		$scope.call = new MesiboCall($scope);
-		$scope.file = new MesiboFile($scope);
+		$scope.file = new MessengerFile($scope);
 	}
 
 	$scope.init_popup = function(){ 
@@ -1503,7 +1386,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.activity = ""; 
 
 		$scope.call = new MesiboCall($scope);
-		$scope.file = new MesiboFile($scope);
+		$scope.file = new MessengerFile($scope);
 
 		$scope.MAX_MEDIA_WIDTH = '180px';
 		$scope.MAX_MEDIA_HEIGHT = '80px';
@@ -1550,7 +1433,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		}
 
 		$scope.isLoggedIn = true;
-			$scope.mesibo = Mesibo.getInstance();
+		$scope.mesibo = Mesibo.getInstance();
 		$scope.mesibo.setAppName(MESIBO_APP_ID);
 		$scope.mesibo.setCredentials(getLoginToken());
 		$scope.mesibo.setListener($scope.mesiboNotify);
@@ -1566,7 +1449,6 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 			//Initialize Application
 			if(demo_app_name == "messenger"){
-				MesiboLog("Init messenger");
 				$scope.init_messenger();
 			}
 
