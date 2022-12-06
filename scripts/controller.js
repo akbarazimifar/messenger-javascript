@@ -763,6 +763,17 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return getFileIcon(f);
 	}
 
+	$scope.updateSummary = function() {
+		var msgs = $scope.summarySession.getMessages();
+		if(msgs && msgs.length > 0){
+			var m = msgs[0];
+			$scope.generateMessageArea($scope.getProfileFromMessage(m));
+		}
+				
+		$scope.refresh()
+
+	}
+
 	$scope.summaryListener = {};
 	$scope.summaryListener.Mesibo_onMessage = function(m) {
 		if(m && !m.isLastMessage()) 
@@ -771,16 +782,18 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		if(isMessageSync && !m && !$scope.users_synced){
 			MesiboLog("Run out of users to display. Syncing..");
 			$scope.users_synced = true;
-			$scope.syncMessages(this, this.readCount - result);
+			$scope.syncMessages(this, this.readCount);
+			$scope.summarySession.sync(100,
+			function on_sync(i){
+				MesiboLog("on_sync summary: ", i);
+				if(i > 0){
+					$scope.updateSummary();
+				}
+			});
+			return;
 		}
 
-		var msgs = this.getMessages();
-		if(msgs && msgs.length > 0){
-			var m = msgs[0];
-			$scope.generateMessageArea($scope.getProfileFromMessage(m));
-		}
-				
-		$scope.refresh()
+		$scope.updateSummary();
 	}
 
 	$scope.sessionReadSummary = function(){
@@ -809,14 +822,12 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		}
 
 		MesiboLog("syncMessages called \n", readSession, count);	
-		$scope.refresh();
 
 		readSession.sync(count,
 			function on_sync(i){
-				MesiboLog("on_sync", i);
+				MesiboLog("on_sync messages: ", i);
 				if(i > 0){
-					MesiboLog("Attempting to read "+ i + " messages");
-					this.read(i);
+					$scope.refresh();
 				}
 			});
 	}
@@ -826,7 +837,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		if(isMessageSync && !m){
 			MesiboLog("Run out of messages to display. Syncing..");
 			$scope.msg_read_limit_reached = true;
-			$scope.syncMessages(this, this.readCount, 1);
+			$scope.syncMessages(this, this.readCount);
 		}
 		
 		if(!m) {
@@ -923,10 +934,8 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		await m.delete();
 
 		if(!$scope.messages.length) {
-			var s = $scope.getSummary();
-			if(s.length) {
-				$scope.generateMessageArea($scope.getProfileFromMessage(s[0]));
-			}
+			$scope.updateSummary();
+			return;
 		}
 		$scope.refresh();
 		return;
