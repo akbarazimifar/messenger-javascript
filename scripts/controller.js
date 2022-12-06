@@ -612,7 +612,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return this.getMessageText(m);
 	}
 
-	$scope.getUserLastMessageTime = function(m){
+	$scope.getUserLastMessageTime = function(m) {
 		if(m.date.daysElapsed) return m.getDateVerbal(true, "Today", "Yesterday");
 		return m.getTime();
 	}
@@ -881,6 +881,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	
 	$scope.Mesibo_onSync = function(count) {
 		if(!count > 0) return;
+		$scope.messages = this.getMessages();
 		$scope.refresh();
 	}
 
