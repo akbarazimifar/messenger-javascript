@@ -771,7 +771,6 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		}
 				
 		$scope.refresh()
-
 	}
 
 	$scope.summaryListener = {};
@@ -782,17 +781,15 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		if(isMessageSync && !m && !$scope.users_synced){
 			MesiboLog("Run out of users to display. Syncing..");
 			$scope.users_synced = true;
-			$scope.syncMessages(this, this.readCount);
-			$scope.summarySession.sync(100,
-			function on_sync(i){
-				MesiboLog("on_sync summary: ", i);
-				if(i > 0){
-					$scope.updateSummary();
-				}
-			});
+			$scope.summarySession.sync(this.readCount);
 			return;
 		}
 
+		$scope.updateSummary();
+	}
+
+	$scope.summaryListener.Mesibo_onSync = function(count) {
+		if(!count > 0) return;
 		$scope.updateSummary();
 	}
 
@@ -815,29 +812,12 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return $scope.messages;
 	}
 
-	$scope.syncMessages = function(readSession, count, type){
-		if(!(readSession && count && readSession.sync)){
-			MesiboLog("syncMessages", "Invalid Input", readSession, count);
-			return;
-		}
-
-		MesiboLog("syncMessages called \n", readSession, count);	
-
-		readSession.sync(count,
-			function on_sync(i){
-				MesiboLog("on_sync messages: ", i);
-				if(i > 0){
-					$scope.refresh();
-				}
-			});
-	}
-	
 	$scope.Mesibo_onMessage = async function(m) {
 		MesiboLog("$scope.prototype.OnMessage", m);
 		if(isMessageSync && !m){
 			MesiboLog("Run out of messages to display. Syncing..");
 			$scope.msg_read_limit_reached = true;
-			$scope.syncMessages(this, this.readCount);
+			$scope.messageSession.sync(this.readCount);
 		}
 		
 		if(!m) {
@@ -897,7 +877,12 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		}
 
 		return 0;
-	};
+	}
+	
+	$scope.Mesibo_onSync = function(count) {
+		if(!count > 0) return;
+		$scope.refresh();
+	}
 
 	$scope.Mesibo_onPresence = async function(m) {
 		// calling refresh is not optimized but keep it for now
