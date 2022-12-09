@@ -55,7 +55,12 @@ const MAX_FILE_SIZE_SUPPORTED = 10000000;
 
 
 
-var mesiboWeb = angular.module('MesiboWeb', []);
+var mesiboWeb = angular.module('MesiboWeb', ['ngSanitize']);
+mesiboWeb.filter('unsafe', ['$sce', function ($sce) {
+    return function (input) {
+        return $sce.trustAsHtml(input);
+    }
+}]);
 
 mesiboWeb.directive('imageonload', function() {
   return {
@@ -351,6 +356,20 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		if(m.isIncomingCall()) dir = "Incoming";
 		else if(m.isOutgoingCall()) dir = "Outgoing";
 		return dir + " " + type + " call at " + m.getTime();
+	}
+	
+	$scope.getFormattedMessageText = function(m) {
+		var text = $scope.getMessageText(m);
+		var t = text.split(/(https?:\/\/\S*)\b/);
+		if(!t) return text;
+		text = '';
+		for(var i=0; i < t.length; i++) {
+			if(t[i].startsWith('https://') || t[i].startsWith('http://')) {
+				text += '<span style="color: #0a8bc5;">' + t[i] + '</span>';
+			} else text += t[i];
+		}
+		return text;
+
 	}
 	
 	$scope.getLastSeen = function(p) {
@@ -877,6 +896,11 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		}
 
 		return 0;
+	}
+	
+	$scope.Mesibo_onMessageUpdate = async function(m) {
+		$scope.refresh();
+		return;
 	}
 	
 	$scope.Mesibo_onSync = function(count) {
