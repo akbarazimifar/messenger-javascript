@@ -86,7 +86,7 @@
     <div ng-show="users_panel_show" class="d-flex flex-column w-100 h-100" id="available-users-panel" ng-style = "{'left': users_panel_show ? 0:'-110%'}" style="background: white;">
 	    <div class="row d-flex flex-row align-items-center p-2 pr-5 m-0" style="background:#00868b; min-height:72px;">
 		    <i class="fas fa-arrow-left p-2 mx-2 my-1 text-white" style="cursor: pointer; align-self: left;" ng-click="hideAvailableUsers()"></i>
-		    <div class="text-white font-weight-bold">Select a Contact to Chat</div>
+		    <div class="text-white font-weight-bold">Select a Contact</div>
 		    <div class="ml-auto">
 			    <i class="fa fa-user-plus" aria-hidden="true" style="color: white; cursor:pointer; float: right; margin-left: 50%;" title="Add Contact" ng-click="showContactForm()"></i>
 		    </div>
@@ -209,7 +209,7 @@
 			    <i class="fas fa-comment-alt text-white" aria-hidden="true" ng-click="showAvailableUsers()" style="cursor:pointer; float: right;padding-top: 5px;" title="New Chat"></i>
 		    </button>
 		    <div ng-repeat="m in getMessages()" on-finish-render="onMessagesRendered" ng-show="isMessageVisible(m)" ng-class="{'align-self-end self p-1 mx-4 rounded bg-white shadow-sm message-item': isSent(m)&&m.isMessage(), 'align-self-start p-1 mx-4 rounded bg-white shadow-sm message-item': isReceived(m)&&m.isMessage(), 'align-self-center self p-1 mx-4 rounded bg-white shadow-sm message-item': !m.isMessage()}" style="margin-top: 4px">
-			    <div class="small font-weight-bold text-primary" ng-show="m.isMessage()" ng-style = "{'display': m.groupid && m.peer != selected_user.getAddress()? 'block':'none'}">
+			    <div class="small font-weight-bold text-primary" ng-show="m.isMessage() && m.isIncoming() && m.isGroupMessage()">
 				    {{getSenderNameFromMessage(m)}}
 			    </div>
 			    <div class="options" style="z-index: 100" ng-show="m.isMessage()">

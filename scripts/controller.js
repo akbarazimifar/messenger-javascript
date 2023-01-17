@@ -360,6 +360,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	
 	$scope.getFormattedMessageText = function(m) {
 		var text = $scope.getMessageText(m);
+		if(!text) return "";
 		var t = text.split(/(https?:\/\/\S*)\b/);
 		if(!t) return text;
 		text = '';
@@ -832,7 +833,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.Mesibo_onMessage = async function(m) {
-		MesiboLog("$scope.prototype.OnMessage", m);
+		//MesiboLog("$scope.prototype.OnMessage", m);
 		if(isMessageSync && !m){
 			MesiboLog("Run out of messages to display. Syncing..");
 			$scope.msg_read_limit_reached = true;
@@ -847,8 +848,15 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		if(!m.mid || m.presence)
 			return;
 
-		if(!m.isDestinedFor($scope.selected_user))
+		if(!$scope.selected_user) {
+			$scope.updateSummary();
 			return;
+		}
+
+		if(!m.isDestinedFor($scope.selected_user)) {
+			//$scope.refresh(); // to update summary
+			return;
+		}
 		
 		if(m.isRealtimeMessage()) {
 			var prev = null;
