@@ -403,7 +403,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.selected_user = contact;
 
 		// Stop read session for previous user 
-		if($scope.messageSession && typeof $scope.messageSession.stop == 'function')
+		if($scope.messageSession)
 			$scope.messageSession.stop();
 
 		$scope.messageSession = null;
@@ -513,6 +513,11 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return p;
 	}
 	
+	$scope.getUserProfileFromMessage = function(m) {
+		if(!m) return null;
+		return m.profile;
+	}
+	
 	$scope.hasPicture = function(m) {
 		var p = $scope.getProfileFromMessage(m);
 		if(!p) return false;
@@ -528,16 +533,36 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return name[0];
 	}
 	
-	$scope.getLetterColor = function(m) {
-		var p = $scope.getProfileFromMessage(m);
+	$scope.hashCode = function(str) {
+		if(!str || !str.length) return 0;
+		var hash = 0;
+		for (var i = 0; i < str.length; i++) {
+			var chr = str.charCodeAt(i);
+			hash = ((hash << 5) - hash) + chr;
+			hash |= 0; 
+		}
+		return hash;
+	}
+	
+	$scope.getTextColorForProfile = function(p) {
 		var colors = ["#e6d200", "#f58559", "#f9a43e", "#e4c62e",
 		            "#67bf74", "#59a2be", "#2093cd", "#ad62a7"];
 		if(!p) return colors[0];
 		var name = p.getNameOrAddress('+');
 		var l = name.length;
 		if(!l) return colors[0];
-		var c = name.charCodeAt(l-1)&7;
+		var c = $scope.hashCode(name)&7;
 		return colors[c];
+	}
+
+	$scope.getLetterColor = function(m) {
+		var p = $scope.getProfileFromMessage(m);
+		return $scope.getTextColorForProfile(p);
+	}
+	
+	$scope.getNameColor = function(m) {
+		var p = $scope.getUserProfileFromMessage(m);
+		return $scope.getTextColorForProfile(p);
 	}
 
 	$scope.getPictureFromMessage = function(m) {
@@ -832,6 +857,23 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		return $scope.messages;
 	}
 
+	$scope.showName = function(m) {
+		if(!m.isMessage() || !m.isIncoming() || !m.isGroupMessage())
+			return false;
+
+		if(!$scope.messages.length || !$scope.messages) return false;
+
+		const cb = (element) => element === m;
+		var i = $scope.messages.findIndex(cb);
+		if(i <= 0) return true;
+		var prev = $scope.messages[i-1];
+
+		if(prev.profile != m.profile || !prev.isIncoming() || !prev.isMessage())
+			return true;
+
+		return false;
+	}
+
 	$scope.Mesibo_onMessage = async function(m) {
 		//MesiboLog("$scope.prototype.OnMessage", m);
 		if(isMessageSync && !m){
@@ -858,8 +900,8 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 			return;
 		}
 		
+		var prev = null;
 		if(m.isRealtimeMessage()) {
-			var prev = null;
 			if($scope.messages.length) {
 				prev = $scope.messages[$scope.messages.length-1];
 			}
@@ -876,7 +918,6 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 			$scope.messages.push(m);
 		}
 		else  {
-			var prev = null;
 			if($scope.messages.length) {
 				prev = $scope.messages[0];
 			}
