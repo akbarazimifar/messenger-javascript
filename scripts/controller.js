@@ -134,6 +134,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.new_contact_phone = '';
 
 	$scope.messages = [];
+	$scope.summary = [];
 
 	$scope.selected_user = null;
 	$scope.selected_user_count = 0; 
@@ -193,7 +194,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		if($scope.scroll_messages && 
 			$scope.scroll_messages.scrollTop == 0
 			&& $scope.messageSession
-			&& $scope.messageSession.getMessages().length){
+			&& $scope.messages.length){
 			MesiboLog('onMessagesRendered');
 		}
 
@@ -215,12 +216,11 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.scroll_messages = e.target;
 
 		if($scope.scroll_messages.scrollTop == 0){
-			if(!($scope.messageSession 
-				&& $scope.messageSession.getMessages)){
+			if(!$scope.messageSession){
 				return;
 			}
 
-			var m = $scope.messageSession.getMessages().length;
+			var m = $scope.messages.length;
 			if(m == 0){
 				return;
 			}
@@ -821,10 +821,13 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 	$scope.summaryListener = {};
 	$scope.summaryListener.Mesibo_onMessage = function(m) {
-		if(m && !m.isLastMessage()) 
-			return;
+		if(m) $scope.summary.push(m);
 
-		if(isMessageSync && !m && !$scope.users_synced){
+		if(!m.isLastMessage()) {
+			return;
+		}
+
+		if(isMessageSync && !m && !$scope.users_synced) {
 			MesiboLog("Run out of users to display. Syncing..");
 			$scope.users_synced = true;
 			$scope.summarySession.sync(this.readCount);
@@ -840,6 +843,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.sessionReadSummary = function(){
+		$scope.summary.length = 0;
 		$scope.summarySession = new MesiboReadSession($scope.summaryListener);
 		$scope.summarySession.enableSummary(true);
 		$scope.summarySession.readCount = MAX_MESSAGES_READ_SUMMARY;
