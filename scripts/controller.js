@@ -823,7 +823,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.summaryListener.Mesibo_onMessage = function(m) {
 		if(m) $scope.summary.push(m);
 
-		if(!m.isLastMessage()) {
+		if(m && !m.isLastMessage()) {
 			return;
 		}
 
