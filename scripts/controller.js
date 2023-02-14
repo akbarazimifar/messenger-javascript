@@ -130,7 +130,6 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.msg_read_limit_reached = false;
 	$scope.users_synced = false;
 	$scope.scroll_messages = null;
-	$scope.is_shared = false;
 	$scope.new_contact_name = '';
 	$scope.new_contact_phone = '';
 
@@ -809,6 +808,8 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.updateSummary = function() {
+		if(!$scope.summarySession) return;
+
 		var msgs = $scope.summarySession.getMessages();
 		if(msgs && msgs.length > 0){
 			var m = msgs[0];
@@ -834,7 +835,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.summaryListener.Mesibo_onSync = function(count) {
-		if(!count > 0) return;
+		if(!count) return;
 		$scope.updateSummary();
 	}
 
@@ -953,9 +954,8 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 	
 	$scope.Mesibo_onSync = function(count) {
-		if(!count > 0) return;
-		$scope.messages = this.getMessages();
-		$scope.refresh();
+		if(!count) return;
+		$scope.messageSession.read(MAX_MESSAGES_READ);
 	}
 
 	$scope.Mesibo_onPresence = async function(m) {
@@ -1343,34 +1343,8 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.refresh();
 	}
 
-	$scope.updateReadPrevious = function(index){
-		MesiboLog("updateReadPrevious");
-		for (var i = index; i >= 0; i--) {
-			if($scope.messages[i].status == MESIBO_MSGSTATUS_READ)
-				return;
-
-			if($scope.messages[i].status == MESIBO_MSGSTATUS_DELIVERED)
-				$scope.messages[i].status = MESIBO_MSGSTATUS_READ;
-		}
-	}
-
 	$scope.Mesibo_onMessageStatus = function(m){
 		MesiboLog("$scope.Mesibo_onMessageStatus", m);
-
-		//In case of shared popup, need to manually update message across all tabs
-		for (var i = $scope.messages.length - 1; i >= 0 && $scope.is_shared; i--) {
-			if($scope.messages[i].mid == m.mid){
-				$scope.messages[i].status = m.status;
-
-				if(m.status == MESIBO_MSGSTATUS_READ && i
-					&& $scope.messages[i-1].status
-					!= MESIBO_MSGSTATUS_READ){ //Make all previous delivered msgs to read
-					$scope.updateReadPrevious(i - 1);
-				}
-
-				break;
-			}
-		}
 		$scope.refresh();
 	}
 
@@ -1513,28 +1487,11 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 				return;
 			}
 
-			//Database initialized successfully
-
-			//Initialize Application
-			if(demo_app_name == "messenger"){
-				$scope.init_messenger();
-			}
-
-			if(demo_app_name == "popup"){
-				//Contact synchronization is not required for popup
-				$scope.is_shared = false;
-				$scope.init_popup();
-			}
+			$scope.init_messenger();
 
 		});
 
 		$scope.mesibo.start();   
-
-		if(demo_app_name == "shared-popup"){
-			//Contact synchronization is not required for shared-popup
-			$scope.is_shared = true;
-			$scope.init_popup();
-		}
 
 		$scope.refresh();
 	}
