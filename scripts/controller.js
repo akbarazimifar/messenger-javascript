@@ -1,6 +1,6 @@
 //controller.js
 
-/** Copyright (c) 2022 Mesibo
+/** Copyright (c) 2023 Mesibo
  * https://mesibo.com
  * All rights reserved.
  *
@@ -829,7 +829,6 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 
 		if(isMessageSync && !m && !$scope.users_synced) {
 			MesiboLog("Run out of users to display. Syncing..");
-			$scope.users_synced = true;
 			$scope.summarySession.sync(this.readCount);
 			return;
 		}
@@ -838,6 +837,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	}
 
 	$scope.summaryListener.Mesibo_onSync = function(count) {
+		$scope.users_synced = true;
 		if(!count) return;
 		$scope.updateSummary();
 	}
@@ -984,17 +984,20 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 			$scope.sessionReadMessages($scope.selected_user, MAX_MESSAGES_READ);
 	}
 
-	$scope.deleteSelectedMessage = async function(m){
+	$scope.deleteSelectedMessage = async function(m, remote){
 		if(!m) return;
 
-		for(var i=0 ; i < $scope.messages.length; i++) {
+		for(var i=0 ; !remote && i < $scope.messages.length; i++) {
 			if($scope.messages[i].mid == m.mid) {
 				$scope.messages.splice(i, 1);
 				break;
 			}
 		}
 
-		await m.delete();
+		if(remote)
+			await m.wipeAndRecall();
+		else
+			await m.delete();
 
 		if(!$scope.messages.length) {
 			$scope.updateSummary();
@@ -1481,6 +1484,14 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.isLoggedIn = true;
 		$scope.mesibo = Mesibo.getInstance();
 		$scope.mesibo.setAppName(MESIBO_APP_ID);
+
+		/* Enable your users to log in from multiple browser windows and tabs.
+		 * https://mesibo.com/documentation/api/messaging/sync-across-browser-tabs-windows/
+		 *
+		 * This is a beta feature
+		 */
+		//$scope.mesibo.enableCrossTabSessions(true);
+		
 		$scope.mesibo.setCredentials(getLoginToken());
 		$scope.mesibo.setListener($scope.mesiboNotify);
 		$scope.mesibo.setDatabase("mesibodb", function(init){
