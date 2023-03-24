@@ -327,6 +327,29 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		$scope.refresh();
 	}
 
+	$scope.showDeliveryTime = function(m) {
+		if(!m || !m.isMessage() || !m.mid || !m.isOutgoing()) return false;
+		if(!m.isDelivered() && !m.isReadByPeer()) return false;
+		var o = document.getElementById('deltime-' + m.mid);
+		if(!o) return false;
+		m.getDeliveryTimestamp(null, function(d) {
+			if(!d) d.style.display = 'none';
+			else o.innerHTML = "Delivered on: " + d.getDate(true) + " " + d.getTime(true);
+		});
+		return true;
+	}
+	
+	$scope.showReadTime = function(m) {
+		if(!m || !m.isMessage() || !m.mid || !m.isOutgoing()) return false;
+		if(!m.isReadByPeer()) return false;
+		var o = document.getElementById('readtime-' + m.mid);
+		if(!o) return false;
+		m.getReadTimestamp(null, function(d) {
+			if(!d) d.style.display = 'none';
+			else o.innerHTML = "Read on: " + d.getDate(true) + " " + d.getTime(true);
+		});
+		return true;
+	}
 
 	$scope.isSent = function(msg){
 		return isSentMessage(msg.status);
@@ -800,6 +823,8 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 	$scope.logout = function(deleteToken){
 		if(deleteToken) $scope.deleteTokenInStorage();
 		$scope.mesibo.stop();
+		if(hasHardCodedLoginToken()) 
+			return;
 		window.location.replace("index.html");
 	}
 

@@ -209,6 +209,9 @@
 			    <i class="fas fa-comment-alt text-white" aria-hidden="true" ng-click="showAvailableUsers()" style="cursor:pointer; float: right;padding-top: 5px;" title="New Chat"></i>
 		    </button>
 		    <div ng-repeat="m in getMessages()" on-finish-render="onMessagesRendered" ng-show="isMessageVisible(m)" ng-class="{'align-self-end self p-1 mx-4 rounded bg-white shadow-sm message-item': isSent(m)&&m.isMessage(), 'align-self-start p-1 mx-4 rounded bg-white shadow-sm message-item': isReceived(m)&&m.isMessage(), 'align-self-center self p-1 mx-4 rounded bg-white shadow-sm message-item': !m.isMessage()}" style="margin-top: 4px">
+			    <div class="small font-italic" ng-show="m.isForwarded()">
+				    Forwarded
+			    </div>
 			    <div class="small text-primary" ng-show="showName(m)" ng-click="generateMessageArea(getUserProfileFromMessage(m));">
 				    <span ng-style = "{'color':getNameColor(m) }">{{getSenderNameFromMessage(m)}}</span>
 			    </div>
@@ -216,6 +219,9 @@
 				    <a href="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true"><i class="fas fa-angle-down text-muted px-2"></i>
 				    </a>
 				    <div class="dropdown-menu dropdown-menu-right">
+					    <a class="dropdown-item" style="cursor: pointer;" ng-attr-id="{{'deltime-' + m.mid}}" ng-show="showDeliveryTime(m)">Delivered</a>
+					    <a class="dropdown-item" style="cursor: pointer;" ng-attr-id="{{'readtime-' + m.mid}}" ng-show="showReadTime(m)">Read</a>
+					    <div class="dropdown-divider" ng-show="m.isOutgoing()"></div>
 					    <a class="dropdown-item" style="cursor: pointer;" ng-click="showForwardList(m)">Forward</a>
 					    <a class="dropdown-item" style="cursor: pointer;" ng-click="deleteSelectedMessage(m, false)">Delete</a>
 					    <a class="dropdown-item" style="cursor: pointer;" ng-show="m.mayBeRetracted()" ng-click="deleteSelectedMessage(m, true)">Delete for All</a>
