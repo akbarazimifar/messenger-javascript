@@ -333,7 +333,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		var o = document.getElementById('deltime-' + m.mid);
 		if(!o) return false;
 		m.getDeliveryTimestamp(null, function(d) {
-			if(d) d.style.display = 'none';
+			if(!d) o.style.display = 'none';
 			else o.innerHTML = "Delivered on: " + d.getDate(true) + " " + d.getTime(true);
 		});
 		return true;
@@ -345,7 +345,7 @@ mesiboWeb.controller('AppController', ['$scope', '$window', '$anchorScroll', fun
 		var o = document.getElementById('readtime-' + m.mid);
 		if(!o) return false;
 		m.getReadTimestamp(null, function(d) {
-			if(d) d.style.display = 'none';
+			if(!d) o.style.display = 'none';
 			else o.innerHTML = "Read on: " + d.getDate(true) + " " + d.getTime(true);
 		});
 		return true;
